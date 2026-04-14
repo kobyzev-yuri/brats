@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+
+{% block title %}Вторичная обработка - KB Admin{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1>Вторичная обработка блоков</h1>
+    <a href="{{ url_for('blocks_list') }}" class="btn btn-secondary">
+        <i class="bi bi-arrow-left"></i> Назад к списку
+    </a>
+</div>
+
+<!-- Информация о выбранных блоках -->
+{% if blocks %}
+<div class="card mb-3">
+    <div class="card-header">
+        <h5>Выбранные блоки для обработки ({{ blocks|length }})</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Block ID</th>
+                        <th>Тип</th>
+                        <th>Вкладка</th>
+                        <th>Статус</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for block in blocks %}
+                    <tr>
+                        <td>{{ block.id }}</td>
+                        <td><code>{{ block.block_id[:50] }}{% if block.block_id|length > 50 %}...{% endif %}</code></td>
+                        <td><span class="badge bg-secondary">{{ block.block_type }}</span></td>
+                        <td>{{ block.tab_name or '-' }}</td>
+                        <td>
+                            {% if block.is_active %}
+                                <span class="badge bg-success">Активен</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Неактивен</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Форма для вторичной обработки -->
+<div class="card">
+    <div class="card-header">
+        <h5>Дополнительные инструкции для обработки</h5>
+    </div>
+    <div class="card-body">
+        <form id="reprocessForm">
+            <div class="mb-3">
+                <label for="additional_instructions" class="form-label">
+                    Опишите, как нужно обработать/дополнить выбранные блоки:
+                </label>
+                <textarea 
+                    class="form-control" 
+                    id="additional_instructions" 
+                    name="additional_instructions" 
+                    rows="6"
+                    placeholder="Например:&#10;- Добавь больше деталей о материалах&#10;- Улучши описание преимуществ&#10;- Добавь информацию о гарантии&#10;- Структурируй текст лучше&#10;- Добавь ключевые слова для SEO"></textarea>
+                <small class="form-text text-muted">
+                    Опишите подробно, что нужно изменить, дополнить или улучшить в выбранных блоках.
+                </small>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Примеры инструкций:</label>
+                <div class="list-group">
+                    <button type="button" class="list-group-item list-group-item-action" onclick="setInstruction('Добавь больше деталей о материалах и технологиях, используемых в отделке')">
+                        Добавить детали о материалах
+                    </button>
+                    <button type="button" class="list-group-item list-group-item-action" onclick="setInstruction('Улучши описание, сделай его более привлекательным для покупателей')">
+                        Улучшить описание
+                    </button>
+                    <button type="button" class="list-group-item list-group-item-action" onclick="setInstruction('Добавь информацию о гарантии и сроках выполнения работ')">
+                        Добавить информацию о гарантии
+                    </button>
+                    <button type="button" class="list-group-item list-group-item-action" onclick="setInstruction('Структурируй текст лучше, добавь подзаголовки и списки')">
+                        Улучшить структуру текста
+                    </button>
+                    <button type="button" class="list-group-item list-group-item-action" onclick="setInstruction('Добавь ключевые слова для SEO, сохраняя естественность текста')">
+                        Оптимизировать для SEO
+                    </button>
+                </div>
+            </div>
+
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="bi bi-arrow-repeat"></i> Отправить на вторичную обработку
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Результаты обработки -->
+<div id="results" class="mt-4" style="display: none;">
+    <div class="card">
+        <div class="card-header">
+            <h5>Результаты обработки</h5>
+        </div>
+        <div class="card-body" id="resultsContent">
+            <!-- Результаты будут здесь -->
+        </div>
+    </div>
+</div>
+
+{% else %}
+<div class="alert alert-warning">
+    <h5>Блоки не выбраны</h5>
+    <p>Выберите блоки в списке и нажмите "Вторичная обработка"</p>
+    <a href="{{ url_for('blocks_list') }}" class="btn btn-primary">Перейти к списку блоков</a>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const blockIds = [{% for block in blocks %}{{ block.id }}{% if not loop.last %}, {% endif %}{% endfor %}];
+
+    function setInstruction(text) {
+        document.getElementById('additional_instructions').value = text;
+    }
+
+    document.getElementById('reprocessForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const instructions = document.getElementById('additional_instructions').value.trim();
+        
+        if (!instructions) {
+            alert('Пожалуйста, укажите дополнительные инструкции');
+            return;
+        }
+
+        if (!confirm(`Отправить ${blockIds.length} блоков на вторичную обработку с указанными инструкциями?`)) {
+            return;
+        }
+
+        // Показать индикатор загрузки
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Обработка...';
+
+        // Отправить запрос
+        fetch('/api/blocks/reprocess', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                block_ids: blockIds,
+                additional_instructions: instructions
+            })
+        })
+        .then(r => r.json())
+        .then(data => {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+
+            if (data.success) {
+                // Показать результаты
+                document.getElementById('results').style.display = 'block';
+                document.getElementById('resultsContent').innerHTML = `
+                    <div class="alert alert-success">
+                        <h6>✅ Обработка завершена успешно!</h6>
+                        <p><strong>${data.message}</strong></p>
+                        <p><strong>Всего блоков:</strong> ${data.blocks_count}</p>
+                        ${data.updated_count ? `<p><strong>Обновлено блоков:</strong> ${data.updated_count}</p>` : ''}
+                        <p><strong>Инструкции:</strong> ${data.instructions}</p>
+                    </div>
+                    <div class="alert alert-info">
+                        <h6>ℹ️ Что дальше?</h6>
+                        <p>Блоки были обработаны и обновлены в Knowledge Base.</p>
+                        <p>Вы можете проверить изменения в списке блоков или просмотреть детали каждого блока.</p>
+                        <div class="mt-2">
+                            <a href="{{ url_for('blocks_list') }}" class="btn btn-primary">
+                                <i class="bi bi-list-ul"></i> Перейти к списку блоков
+                            </a>
+                        </div>
+                    </div>
+                `;
+
+                // Прокрутить к результатам
+                document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+            } else {
+                // Показать ошибку
+                document.getElementById('results').style.display = 'block';
+                document.getElementById('resultsContent').innerHTML = `
+                    <div class="alert alert-danger">
+                        <h6>❌ Ошибка обработки</h6>
+                        <p><strong>${data.error || 'Неизвестная ошибка'}</strong></p>
+                        ${data.demo_mode ? `
+                            <div class="mt-3">
+                                <h6>Режим демо</h6>
+                                <p>Для реальной обработки необходимо:</p>
+                                <ol>
+                                    <li>Установить kb-service</li>
+                                    <li>Настроить GEMINI_API_KEY в config.env</li>
+                                </ol>
+                            </div>
+                        ` : ''}
+                        ${data.prompt ? `
+                            <details class="mt-3">
+                                <summary>Промпт для отладки</summary>
+                                <pre class="bg-light p-3 mt-2 rounded" style="max-height: 300px; overflow: auto;">${data.prompt}</pre>
+                            </details>
+                        ` : ''}
+                    </div>
+                `;
+                document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+            }
+        })
+        .catch(error => {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+            alert('Ошибка при отправке запроса: ' + error.message);
+        });
+    });
+</script>
+{% endblock %}
+

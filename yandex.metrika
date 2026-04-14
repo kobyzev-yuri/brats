@@ -1,0 +1,7 @@
+ClientID
+565a1c95069242a8b4eedda8a301a4b5
+Client secret
+3f5b001b64204d6981848177e5e69fa2
+Redirect URI для веб-сервисов
+http://localhost:8000/auth/yandex/callback
+ https://oauth.yandex.ru/authorize?response_type=token&client_id=565a1c95069242a8b4eedda8a301a4b5

@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Статистика - KB Admin{% endblock %}
+
+{% block content %}
+<h1>Статистика Knowledge Base</h1>
+
+<!-- Общая статистика -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">Всего блоков</h5>
+                <h2 class="text-primary">{{ total_stats.total_blocks }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">Активных</h5>
+                <h2 class="text-success">{{ total_stats.active_blocks }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">Неактивных</h5>
+                <h2 class="text-secondary">{{ total_stats.inactive_blocks }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Статистика по типам -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5>Статистика по типам блоков</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Тип</th>
+                        <th>Активных</th>
+                        <th>Неактивных</th>
+                        <th>Всего</th>
+                        <th>Процент активных</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for stat in stats_by_type %}
+                    <tr>
+                        <td><span class="badge bg-secondary">{{ stat.block_type }}</span></td>
+                        <td><span class="badge bg-success">{{ stat.active_count }}</span></td>
+                        <td><span class="badge bg-secondary">{{ stat.inactive_count }}</span></td>
+                        <td><strong>{{ stat.total_count }}</strong></td>
+                        <td>
+                            {% set percent = (stat.active_count / stat.total_count * 100) if stat.total_count > 0 else 0 %}
+                            <div class="progress">
+                                <div class="progress-bar" role="progressbar" style="width: {{ percent }}%">
+                                    {{ "%.1f"|format(percent) }}%
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Статистика по вкладкам -->
+<div class="card">
+    <div class="card-header">
+        <h5>Статистика по вкладкам</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Вкладка</th>
+                        <th>Активных</th>
+                        <th>Неактивных</th>
+                        <th>Всего</th>
+                        <th>Процент активных</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for stat in stats_by_tab %}
+                    <tr>
+                        <td><strong>{{ stat.tab_name }}</strong></td>
+                        <td><span class="badge bg-success">{{ stat.active_count }}</span></td>
+                        <td><span class="badge bg-secondary">{{ stat.inactive_count }}</span></td>
+                        <td><strong>{{ stat.total_count }}</strong></td>
+                        <td>
+                            {% set percent = (stat.active_count / stat.total_count * 100) if stat.total_count > 0 else 0 %}
+                            <div class="progress">
+                                <div class="progress-bar" role="progressbar" style="width: {{ percent }}%">
+                                    {{ "%.1f"|format(percent) }}%
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+

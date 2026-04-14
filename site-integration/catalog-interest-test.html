@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест: интерес к объекту → нейропродажник</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 920px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
+        h1 { color: #1a3a52; margin-top: 0; }
+        .intro {
+            background: linear-gradient(135deg, #e3f2fd 0%, #f5f5f5 100%);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+        }
+        .intro p { margin: 0 0 8px 0; }
+        .places { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin-bottom: 32px; }
+        .place-card {
+            background: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            border: 1px solid #e0e0e0;
+        }
+        .place-card h3 { margin: 0 0 8px 0; color: #1565c0; font-size: 1.15rem; }
+        .place-card .meta { font-size: 0.85rem; color: #666; margin: 8px 0; }
+        .place-card .price { font-size: 1.2rem; font-weight: 700; color: #2e7d32; margin: 8px 0; }
+        .place-card .btn-interest {
+            width: 100%;
+            margin-top: 12px;
+            padding: 12px 16px;
+            background: #1565c0;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        .place-card .btn-interest:hover { background: #0d47a1; }
+        .renovation-section { margin-bottom: 32px; }
+        .renovation-section h2 { margin-bottom: 16px; color: #1a3a52; }
+        .renovation-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+        .renovation-card {
+            background: #fff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            border: 1px solid #e0e0e0;
+            cursor: pointer;
+        }
+        .renovation-card:hover { border-color: #1565c0; box-shadow: 0 4px 14px rgba(21,101,192,0.2); }
+        .renovation-card .img-wrap {
+            position: relative;
+            height: 140px;
+            background: #e8e8e8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .renovation-card .img-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .renovation-card .img-wrap .placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255,255,255,0.9);
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-align: center;
+            padding: 12px;
+        }
+        .renovation-card .img-wrap .hover-timer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: rgba(21,101,192,0.3);
+            transform-origin: left;
+            transition: transform 0.2s linear;
+        }
+        .renovation-card .img-wrap .hover-timer.active { background: #1565c0; }
+        .renovation-card .title { padding: 12px; font-weight: 600; color: #333; font-size: 0.95rem; }
+        .renovation-card .hint { padding: 0 12px 12px; font-size: 0.8rem; color: #666; }
+        #chat-trigger { position: fixed; bottom: 24px; right: 24px; width: 56px; height: 56px; border-radius: 50%; background: #1565c0; color: #fff; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.2); font-size: 24px; z-index: 1000; }
+        #chat-trigger:hover { background: #0d47a1; }
+        #chat-panel {
+            display: none;
+            position: fixed;
+            bottom: 90px;
+            right: 24px;
+            width: 380px;
+            max-width: calc(100vw - 48px);
+            height: 480px;
+            max-height: 70vh;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+            flex-direction: column;
+            z-index: 1001;
+            overflow: hidden;
+        }
+        #chat-panel.open { display: flex; }
+        #chat-header { padding: 14px 16px; background: #1565c0; color: #fff; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+        #chat-close { background: none; border: none; color: #fff; cursor: pointer; font-size: 20px; padding: 0 4px; }
+        #chat-messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; background: #fafafa; }
+        .chat-msg { max-width: 85%; padding: 10px 14px; border-radius: 12px; font-size: 0.95rem; line-height: 1.4; }
+        .chat-msg.user { align-self: flex-end; background: #1565c0; color: #fff; }
+        .chat-msg.assistant { align-self: flex-start; background: #fff; border: 1px solid #e0e0e0; }
+        .chat-msg .time { font-size: 0.75rem; opacity: 0.8; margin-top: 4px; }
+        #chat-input-wrap { padding: 12px; background: #fff; border-top: 1px solid #e0e0e0; display: flex; gap: 8px; }
+        #chat-input { flex: 1; padding: 10px 14px; border: 1px solid #ccc; border-radius: 8px; font-size: 0.95rem; }
+        #chat-send { padding: 10px 18px; background: #1565c0; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
+        #chat-send:hover { background: #0d47a1; }
+        #chat-send:disabled { opacity: 0.6; cursor: not-allowed; }
+        .chat-typing { align-self: flex-start; color: #666; font-size: 0.9rem; padding: 8px 0; }
+        .backend-config { margin-top: 16px; padding: 12px; background: #fff; border-radius: 8px; border: 1px solid #e0e0e0; }
+        .backend-config label { display: block; margin: 6px 0 2px 0; font-size: 0.9rem; }
+        .backend-config input { width: 100%; max-width: 480px; padding: 8px 10px; margin-bottom: 8px; border: 1px solid #ccc; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>Тест: интерес к объекту → передача контекста нейропродажнику</h1>
+    <div class="intro">
+        <p><strong>Схема:</strong> вместо Яндекс.Метрики используется наш счётчик (события в <code>analytics_events</code>). Когда клиент нажимает «Интересуюсь этим объектом» на карточке места:</p>
+        <ul style="margin: 8px 0 0 20px;">
+            <li>отправляется событие <code>place_interest</code> в сервис аналитики (если настроен URL);</li>
+            <li>открывается чат и автоматически отправляется первое сообщение с контекстом выбранного объекта — нейропродажник получает управление и контекст (название, посёлок, цена) и может сразу ответить по существу.</li>
+        </ul>
+        <p><strong>Плюс:</strong> задержка мыши на картинке варианта ремонта <strong>10 секунд</strong> или клик по кнопке на карточке объекта — событие уходит в аналитику, аналитик дергает нейропродажника (если включено «Сначала аналитик»).</p>
+        <p style="margin-top: 12px;"><a href="site-integration-example.html" style="color: #1565c0;">Основная тестовая страница</a> · <a href="/lk/login.html" style="color: #1565c0;">Личный кабинет</a></p>
+    </div>
+
+    <h2>Варианты ремонта</h2>
+    <p style="color:#666; margin-top: -8px; margin-bottom: 12px;">Задержите мышь на картинке 10 секунд — аналитик зафиксирует интерес и вызовет нейропродажника.</p>
+    <div class="renovation-section">
+        <div class="renovation-gallery" id="renovation-gallery"></div>
+    </div>
+
+    <h2>Объекты (места)</h2>
+    <div class="places" id="places"></div>
+
+    <div class="backend-config">
+        <label>URL n8n webhook (чат):</label>
+        <input type="text" id="cfg-n8n" placeholder="при :8000 подставится http://localhost:8000/api/n8n-proxy">
+        <label>URL аналитики (событие place_interest, опционально):</label>
+        <input type="text" id="cfg-analytics" placeholder="при :8000 — http://localhost:8000/api/analytics-proxy">
+        <label style="margin-top:10px;"><input type="checkbox" id="cfg-trigger-first"> Сначала аналитик: вызвать триггер через 2 сек (цепочка: событие → аналитик → нейропродажник)</label>
+    </div>
+
+    <button type="button" id="chat-trigger" title="Чат">💬</button>
+    <div id="chat-panel">
+        <div id="chat-header">
+            <span>Чат с консультантом</span>
+            <button type="button" id="chat-close">×</button>
+        </div>
+        <div id="chat-messages"></div>
+        <div id="chat-input-wrap">
+            <input type="text" id="chat-input" placeholder="Напишите сообщение..." autocomplete="off">
+            <button type="button" id="chat-send">Отправить</button>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        const HOVER_TRIGGER_SEC = 10;
+
+        const RENOVATIONS = [
+            { id: 'black_box', name: 'Черновая отделка', color: '#5d4037', kb_ref: 'черновая' },
+            { id: 'standard', name: 'Стандартная отделка', color: '#1565c0', kb_ref: 'стандартная' },
+            { id: 'design', name: 'Дизайнерский ремонт', color: '#6a1b9a', kb_ref: 'дизайнерский' },
+            { id: 'pre_clean', name: 'Предчистовая отделка', color: '#2e7d32', kb_ref: 'предчистовая' }
+        ];
+
+        const PLACES = [
+            { id: 'lot-15', name: 'Участок 15', settlement: 'КП «Родные берега»', price: 2100000, area: '6 соток', notes: 'Коммуникации подведены' },
+            { id: 'house-lot-7', name: 'Дом 120 м², лот 7', settlement: 'КП «Родные берега»', price: 7500000, area: '120 м²', finishing: 'черновая', notes: 'Ипотека, скидка при 100%' },
+            { id: 'townhouse-90', name: 'Таунхаус 90 м²', settlement: 'КП «Солнечный»', price: 5800000, area: '90 м²', finishing: 'стандартная', notes: 'Рассрочка' }
+        ];
+
+        function getVisitorId() {
+            let v = localStorage.getItem('brats_visitor_id');
+            if (!v) {
+                v = 'visitor_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('brats_visitor_id', v);
+            }
+            return v;
+        }
+        function getSessionId() {
+            let s = sessionStorage.getItem('brats_session_id');
+            if (!s) {
+                s = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                sessionStorage.setItem('brats_session_id', s);
+            }
+            return s;
+        }
+
+        function getN8nUrl() {
+            let v = document.getElementById('cfg-n8n').value.trim();
+            if (!v) {
+                const port = window.location.port || '80';
+                const host = window.location.hostname || 'localhost';
+                const protocol = window.location.protocol || 'http:';
+                if (port === '8000') v = protocol + '//' + host + ':' + port + '/api/n8n-proxy';
+                else v = protocol + '//' + (host === '0.0.0.0' ? 'localhost' : host) + ':5678/webhook/sales-agent-kb';
+            }
+            return v.replace(/\/+$/, '');
+        }
+
+        function getAnalyticsUrl() {
+            let v = document.getElementById('cfg-analytics').value.trim().replace(/\/+$/, '');
+            if (!v && window.location.port === '8000') {
+                v = window.location.protocol + '//' + (window.location.hostname || 'localhost') + ':8000/api/analytics-proxy';
+            }
+            return v;
+        }
+        function getTriggerUrl() {
+            if (window.location.port === '8000') {
+                return window.location.protocol + '//' + (window.location.hostname || 'localhost') + ':8000/api/analytics-trigger-proxy';
+            }
+            var base = document.getElementById('cfg-analytics').value.trim().replace(/\/+$/, '');
+            if (base && base.indexOf('/api/analytics-proxy') !== -1) base = base.replace(/\/api\/analytics-proxy$/, '');
+            else if (!base) base = 'http://localhost:8002';
+            return base + '/api/analytics/trigger';
+        }
+
+        function renderRenovationGallery() {
+            const wrap = document.getElementById('renovation-gallery');
+            if (!wrap) return;
+            wrap.innerHTML = '';
+            RENOVATIONS.forEach(function(r) {
+                var card = document.createElement('div');
+                card.className = 'renovation-card';
+                card.setAttribute('data-renovation-id', r.id);
+                card.setAttribute('data-renovation-name', r.name);
+                var bgStyle = r.color ? 'background:' + r.color + ';' : '';
+                card.innerHTML =
+                    '<div class="img-wrap" style="' + bgStyle + '">' +
+                    '<span class="placeholder">' + escapeHtml(r.name) + '</span>' +
+                    '<span class="hover-timer" id="timer-' + escapeHtml(r.id) + '"></span>' +
+                    '</div>' +
+                    '<div class="title">' + escapeHtml(r.name) + '</div>' +
+                    '<div class="hint">Задержите мышь 10 сек</div>';
+                (function(renovation) {
+                    var hoverTimerId = null;
+                    var progressId = null;
+                    var fired = false;
+                    card.addEventListener('mouseenter', function() {
+                        if (hoverTimerId || fired) return;
+                        var timerEl = card.querySelector('.hover-timer');
+                        if (timerEl) timerEl.classList.add('active');
+                        var start = Date.now();
+                        progressId = setInterval(function() {
+                            var elapsed = (Date.now() - start) / 1000;
+                            if (timerEl) timerEl.style.transform = 'scaleX(' + Math.min(elapsed / HOVER_TRIGGER_SEC, 1) + ')';
+                            if (elapsed >= HOVER_TRIGGER_SEC && !fired) {
+                                fired = true;
+                                clearInterval(progressId);
+                                progressId = null;
+                                if (timerEl) timerEl.classList.remove('active');
+                                onRenovationHoverTrigger(renovation);
+                            }
+                        }, 100);
+                        hoverTimerId = setTimeout(function() {
+                            hoverTimerId = null;
+                            if (progressId) clearInterval(progressId);
+                        }, HOVER_TRIGGER_SEC * 1000 + 200);
+                    });
+                    card.addEventListener('mouseleave', function() {
+                        if (hoverTimerId) clearTimeout(hoverTimerId);
+                        hoverTimerId = null;
+                        if (progressId) clearInterval(progressId);
+                        progressId = null;
+                        fired = false;
+                        var timerEl = card.querySelector('.hover-timer');
+                        if (timerEl) {
+                            timerEl.style.transform = 'scaleX(0)';
+                            timerEl.classList.remove('active');
+                        }
+                    });
+                })(r);
+                wrap.appendChild(card);
+            });
+        }
+
+        function onRenovationHoverTrigger(renovation) {
+            currentPlaceContext = {
+                place_id: renovation.id,
+                name: renovation.name,
+                renovation_type: renovation.id,
+                kb_ref: renovation.kb_ref
+            };
+            sendAnalyticsEvent('card_view_duration', {
+                place_id: renovation.id,
+                place_name: renovation.name,
+                object_name: renovation.name,
+                duration_seconds: HOVER_TRIGGER_SEC,
+                renovation_type: renovation.id
+            });
+
+            document.getElementById('chat-panel').classList.add('open');
+            var msgWrap = document.getElementById('chat-messages');
+            var triggerFirst = document.getElementById('cfg-trigger-first').checked;
+
+            if (triggerFirst && getTriggerUrl()) {
+                var waitMsg = document.createElement('div');
+                waitMsg.className = 'chat-msg assistant';
+                waitMsg.innerHTML = '<span class="text">Зафиксирован интерес к варианту «' + escapeHtml(renovation.name) + '» (10 сек). Вызов триггера аналитика...</span><div class="time"></div>';
+                msgWrap.appendChild(waitMsg);
+                msgWrap.scrollTop = msgWrap.scrollHeight;
+
+                (function(r) {
+                    setTimeout(function() {
+                        fetch(getTriggerUrl() + '?visitor_id=' + encodeURIComponent(getVisitorId()) + '&session_id=' + encodeURIComponent(getSessionId()), { method: 'POST' })
+                            .then(function(res) { return res.json(); })
+                            .then(function(data) {
+                                var resMsg = document.createElement('div');
+                                resMsg.className = 'chat-msg assistant';
+                                resMsg.innerHTML = '<span class="text">' + (data.triggered ? 'Аналитик вызвал нейропродажника (score ' + (data.intent_score || 0) + ').' : 'Триггер: score ' + (data.intent_score || 0) + '.') + '</span><div class="time"></div>';
+                                msgWrap.appendChild(resMsg);
+                                msgWrap.scrollTop = msgWrap.scrollHeight;
+                                sendChatMessage('Интересует вариант «' + r.name + '». Расскажите об условиях.');
+                            })
+                            .catch(function(e) {
+                                var errMsg = document.createElement('div');
+                                errMsg.className = 'chat-msg assistant';
+                                errMsg.innerHTML = '<span class="text">Ошибка триггера: ' + escapeHtml(e.message) + '. Отправляю сообщение в чат.</span><div class="time"></div>';
+                                msgWrap.appendChild(errMsg);
+                                sendChatMessage('Интересует вариант «' + r.name + '». Расскажите об условиях.');
+                            });
+                    }, 500);
+                })(renovation);
+            } else {
+                if (msgWrap.children.length === 0) {
+                    var welcome = document.createElement('div');
+                    welcome.className = 'chat-msg assistant';
+                    welcome.innerHTML = '<span class="text">Передаю консультанту ваш интерес к варианту ремонта.</span><div class="time"></div>';
+                    msgWrap.appendChild(welcome);
+                }
+                sendChatMessage('Интересует вариант «' + renovation.name + '». Расскажите об условиях.');
+            }
+        }
+
+        function renderPlaces() {
+            const wrap = document.getElementById('places');
+            wrap.innerHTML = '';
+            PLACES.forEach(function(p) {
+                const card = document.createElement('div');
+                card.className = 'place-card';
+                card.setAttribute('data-place', JSON.stringify(p));
+                const priceStr = (p.price || 0).toLocaleString('ru-RU') + ' ₽';
+                card.innerHTML =
+                    '<h3>' + escapeHtml(p.name) + '</h3>' +
+                    '<div class="meta">' + escapeHtml(p.settlement || '') + (p.area ? ', ' + p.area : '') + '</div>' +
+                    '<div class="price">' + priceStr + '</div>' +
+                    (p.notes ? '<div class="meta">' + escapeHtml(p.notes) + '</div>' : '') +
+                    '<button type="button" class="btn-interest">Интересуюсь этим объектом — передать консультанту</button>';
+                card.querySelector('.btn-interest').addEventListener('click', function() { onPlaceInterest(p); });
+                wrap.appendChild(card);
+            });
+        }
+        function escapeHtml(s) {
+            const el = document.createElement('div');
+            el.textContent = s;
+            return el.innerHTML;
+        }
+
+        async function sendAnalyticsEvent(eventType, eventData) {
+            const url = getAnalyticsUrl();
+            if (!url) return;
+            try {
+                await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        event_type: eventType,
+                        visitor_id: getVisitorId(),
+                        session_id: getSessionId(),
+                        source: 'site_integration',
+                        event_data: {
+                            page_url: window.location.href,
+                            page_title: document.title,
+                            timestamp: new Date().toISOString(),
+                            ...eventData
+                        }
+                    })
+                });
+            } catch (e) { console.warn('Analytics:', e.message); }
+        }
+
+        let currentPlaceContext = null;
+
+        async function onPlaceInterest(place) {
+            currentPlaceContext = {
+                name: place.name,
+                price: place.price,
+                settlement: place.settlement,
+                area: place.area,
+                finishing: place.finishing,
+                notes: place.notes,
+                place_id: place.id
+            };
+
+            await sendAnalyticsEvent('place_interest', {
+                place_id: place.id,
+                place_name: place.name,
+                settlement: place.settlement,
+                price: place.price,
+                area: place.area
+            });
+
+            document.getElementById('chat-panel').classList.add('open');
+            const msgWrap = document.getElementById('chat-messages');
+            const triggerFirst = document.getElementById('cfg-trigger-first').checked;
+
+            if (triggerFirst && getTriggerUrl()) {
+                const waitMsg = document.createElement('div');
+                waitMsg.className = 'chat-msg assistant';
+                waitMsg.innerHTML = '<span class="text">Событие отправлено в аналитику. Через 2 сек вызов триггера (аналитик → нейропродажник)...</span><div class="time"></div>';
+                msgWrap.appendChild(waitMsg);
+                msgWrap.scrollTop = msgWrap.scrollHeight;
+
+                await new Promise(function(r) { setTimeout(r, 2000); });
+                try {
+                    var triggerUrl = getTriggerUrl() + '?visitor_id=' + encodeURIComponent(getVisitorId()) + '&session_id=' + encodeURIComponent(getSessionId());
+                    var r = await fetch(triggerUrl, { method: 'POST' });
+                    var data = await r.json().catch(function() { return {}; });
+                    var resMsg = document.createElement('div');
+                    resMsg.className = 'chat-msg assistant';
+                    if (data.triggered) {
+                        resMsg.innerHTML = '<span class="text">Аналитик зафиксировал интерес (score ' + (data.intent_score || 0) + '). Открываю чат с контекстом объекта.</span><div class="time"></div>';
+                    } else {
+                        resMsg.innerHTML = '<span class="text">Триггер не сработал (score ' + (data.intent_score || 0) + ' или аналитик недоступен). Открываю чат вручную.</span><div class="time"></div>';
+                    }
+                    msgWrap.appendChild(resMsg);
+                    msgWrap.scrollTop = msgWrap.scrollHeight;
+                } catch (e) {
+                    var errMsg = document.createElement('div');
+                    errMsg.className = 'chat-msg assistant';
+                    errMsg.innerHTML = '<span class="text">Ошибка вызова триггера: ' + escapeHtml(e.message) + '. Открываю чат вручную.</span><div class="time"></div>';
+                    msgWrap.appendChild(errMsg);
+                }
+            } else if (msgWrap.children.length === 0) {
+                const welcome = document.createElement('div');
+                welcome.className = 'chat-msg assistant';
+                welcome.innerHTML = '<span class="text">Сейчас передам консультанту ваш интерес к объекту. Один момент...</span><div class="time"></div>';
+                msgWrap.appendChild(welcome);
+            }
+
+            const firstMessage = 'Интересует этот объект. Хочу узнать условия.';
+            await sendChatMessage(firstMessage);
+        }
+
+        function appendMessage(role, text) {
+            const wrap = document.getElementById('chat-messages');
+            const div = document.createElement('div');
+            div.className = 'chat-msg ' + role;
+            const time = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+            div.innerHTML = '<span class="text"></span><div class="time">' + time + '</div>';
+            div.querySelector('.text').textContent = text;
+            wrap.appendChild(div);
+            wrap.scrollTop = wrap.scrollHeight;
+        }
+
+        function setTyping(show) {
+            let el = document.getElementById('chat-typing');
+            if (show && !el) {
+                el = document.createElement('div');
+                el.id = 'chat-typing';
+                el.className = 'chat-typing';
+                el.textContent = 'Консультант печатает...';
+                document.getElementById('chat-messages').appendChild(el);
+            }
+            if (el) el.style.display = show ? 'block' : 'none';
+            const wrap = document.getElementById('chat-messages');
+            if (wrap) wrap.scrollTop = wrap.scrollHeight;
+        }
+
+        async function sendChatMessage(text) {
+            if (!text || !text.trim()) return;
+            const msg = text.trim();
+            appendMessage('user', msg);
+            document.getElementById('chat-input').value = '';
+
+            const n8nUrl = getN8nUrl();
+            if (!n8nUrl) {
+                appendMessage('assistant', 'Укажите URL n8n webhook выше (или откройте страницу с localhost:8000).');
+                return;
+            }
+
+            setTyping(true);
+            document.getElementById('chat-send').disabled = true;
+            try {
+                const payload = {
+                    message: msg,
+                    channel: 'website',
+                    external_id: getVisitorId(),
+                    metadata: {
+                        visitor_id: getVisitorId(),
+                        session_id: getSessionId(),
+                        event_type: currentPlaceContext ? 'place_interest' : 'chat_message',
+                        page_url: window.location.href,
+                        page_title: document.title,
+                        timestamp: new Date().toISOString(),
+                        real_estate_context: currentPlaceContext || null
+                    }
+                };
+                const res = await fetch(n8nUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const rawText = await res.text();
+                let data = {};
+                try { data = rawText ? JSON.parse(rawText) : {}; } catch (e) { data = { _raw: rawText ? rawText.substring(0, 300) : '' }; }
+                const reply = data.response || data.agent_response || data.message || (data._raw ? 'Ответ: ' + data._raw : 'Не удалось получить ответ. Проверьте n8n и webhook.');
+                appendMessage('assistant', reply);
+                if (currentPlaceContext && msg.indexOf('Интересует этот объект') !== -1) currentPlaceContext = null;
+            } catch (e) {
+                appendMessage('assistant', 'Ошибка: ' + (e.message || 'сеть'));
+            }
+            setTyping(false);
+            document.getElementById('chat-send').disabled = false;
+        }
+
+        document.getElementById('chat-trigger').addEventListener('click', function() {
+            currentPlaceContext = null;
+            document.getElementById('chat-panel').classList.add('open');
+            if (document.getElementById('chat-messages').children.length === 0) {
+                appendMessage('assistant', 'Здравствуйте! Напишите, что вас интересует, или выберите объект выше и нажмите «Интересуюсь этим объектом».');
+            }
+        });
+        document.getElementById('chat-close').addEventListener('click', function() {
+            document.getElementById('chat-panel').classList.remove('open');
+        });
+        document.getElementById('chat-send').addEventListener('click', function() {
+            sendChatMessage(document.getElementById('chat-input').value);
+        });
+        document.getElementById('chat-input').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendChatMessage(this.value);
+            }
+        });
+
+        renderRenovationGallery();
+        renderPlaces();
+    })();
+    </script>
+</body>
+</html>

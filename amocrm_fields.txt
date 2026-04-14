@@ -1,0 +1,80 @@
+
+=== Сделки (лиды) — AMOCRM_LEAD_PHONE_FIELD_ID ===
+id	name	type	code
+1275427	utm_content	tracking_data	UTM_CONTENT
+1275429	utm_medium	tracking_data	UTM_MEDIUM
+1275431	utm_campaign	tracking_data	UTM_CAMPAIGN
+1275433	utm_source	tracking_data	UTM_SOURCE
+1275435	utm_term	tracking_data	UTM_TERM
+1275437	utm_referrer	tracking_data	UTM_REFERRER
+1275439	roistat	tracking_data	ROISTAT
+1275441	referrer	tracking_data	REFERRER
+1275443	openstat_service	tracking_data	OPENSTAT_SERVICE
+1275445	openstat_campaign	tracking_data	OPENSTAT_CAMPAIGN
+1275447	openstat_ad	tracking_data	OPENSTAT_AD
+1275449	openstat_source	tracking_data	OPENSTAT_SOURCE
+1275451	from	tracking_data	FROM
+1275453	gclientid	tracking_data	GCLIENTID
+1275455	_ym_uid	tracking_data	_YM_UID
+1275457	_ym_counter	tracking_data	_YM_COUNTER
+1275459	gclid	tracking_data	GCLID
+1275461	yclid	tracking_data	YCLID
+1275463	fbclid	tracking_data	FBCLID
+1292815	Когда планируют покупать	select	
+1292817	Способ оплаты	multiselect	
+1292819	Есть пред одобрение ипотеки	select	
+1292827	Одобренная сумма	numeric	
+1292833	Используется материнский капитал	radiobutton	
+1292835	Паспорт	file	
+1292837	Снилс	file	
+1292881	Покупка участка	select	
+1292883	Адрес строительства	streetaddress	
+1292885	Категория объекта	multiselect	
+1292887	Этажность строения	select	
+1292889	Площадь строения (кв. м)	numeric	
+1292891	Тип отделки	select	
+1292893	Планировка	select	
+1292895	Фундамент	select	
+1292897	Коммуникации	multiselect	
+1292899	Проект	select	
+1292901	Файл проекта	file	
+1292903	Сдача объекта	date	
+1292905	Благоустройство территории	multiselect	
+1292907	Доп постройки	multiselect	
+1292909	Безопасность	multiselect	
+1292911	Дополнительная информация	text	
+1292913	Доп соглашение	file	
+1292915	Сдача работ	date	
+1302019	Тип отделки	select	
+1302769	Ссылка на объявление	url	AVITOLEAD
+1302771	Ссылка на чат	url	AVITOCHAT
+1304897	Source phone	text	
+1319361	Причина отказа	select	
+1363843	ИМЯ	textarea	IMYA
+1363845	ВИД_ОТДЕЛКИ_И_РЕМОНТА	textarea	VID_OTDELKI_I_REMONTA
+1363847	ПЕРВОНАЧАЛЬНЫЙ_ВЗНОС	textarea	PERVONACHALNII_VZNOS
+1363853	КАКУЮ_ПЛОЩАДЬ_ДОМА_ВЫ_РАССМАТРИВАЕТЕ	textarea	KAKUYU_PLOSCHAD_DOMA_VI_RASSMATRIVAETE
+1363855	КАКОЙ_РЕМОНТ_ВАМ_НУЖЕН	textarea	KAKOI_REMONT_VAM_NUZHEN
+1363857	КАКИМ_ОБРАЗОМ_ВАМ_УДОБНЕЕ_ПОЛУЧИТЬ_ИНФОРМАЦИЮ_ОБ_АКТУАЛЬНОЙ_ЦЕНЕ	textarea	KAKIM_OBRAZOM_VAM_UDOBNEE_POLUCHIT_INFORMATSIYU_OB_AKTUALNOI_TSE
+1363859	CHECKBOX	textarea	CHECKBOX
+1478659	TRANID	textarea	TRANID
+1478661	FORMNAME	textarea	FORMNAME
+1478663	FORMID	textarea	FORMID
+1478665	REFERER	url	REFERER
+1601699	MESSENGER-TYPE	textarea	MESSENGERTYPE
+1601701	MESSENGER-ID	textarea	MESSENGERID
+1601703	Я_СОГЛАСЕН_С_ПОЛИТИКОЙ_КОНФИДЕНЦИАЛЬНОСТИ	textarea	YA_SOGLASEN_S_POLITIKOI_KONFIDENTSIALNOSTI
+1606367	Локация	text	AVITOLOCATION
+=== Контакты — AMOCRM_CONTACT_PHONE_FIELD_ID ===
+id	name	type	code
+1275417	Должность	text	POSITION
+1275419	Телефон	multitext	PHONE
+1275421	Email	multitext	EMAIL
+1292917	Ссылка на Telegram	url	
+1302763	Ссылка на профиль авито	url	AVITOPROFILE
+1302765	Avito ID	text	AVITOID
+1304899	Source phone	text	
+1470953	Max ID	text	MAXID
+1490153	Telegram ID	text	TGID
+1490155	Telegram username	text	TGUSERNAME
+1528297	Max User ID	text	MAXUSERID

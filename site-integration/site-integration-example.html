@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Коттеджный посёлок — каталог и чат с консультантом</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #fafafa;
+        }
+        h1 { color: #1a3a52; margin-top: 0; }
+        .intro {
+            background: linear-gradient(135deg, #e8f4f8 0%, #f0f7fa 100%);
+            padding: 24px;
+            border-radius: 8px;
+            margin-bottom: 32px;
+        }
+        .catalog {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        .card {
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            border: 1px solid #e0e0e0;
+        }
+        .card h3 { margin: 0 0 8px 0; color: #1a3a52; font-size: 1.1rem; }
+        .card .badge {
+            display: inline-block;
+            font-size: 0.75rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            background: #e0f2f1;
+            color: #00695c;
+        }
+        .card .badge.standard { background: #e3f2fd; color: #1565c0; }
+        .card .price { font-size: 1.25rem; font-weight: 700; color: #2e7d32; margin: 8px 0; }
+        .card .features { font-size: 0.9rem; color: #555; margin: 8px 0; }
+        .card .btn-chat {
+            width: 100%;
+            margin-top: 12px;
+            padding: 10px 16px;
+            background: #1976d2;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+        .card .btn-chat:hover { background: #1565c0; }
+        .form-section {
+            background: #fff;
+            padding: 24px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            margin-bottom: 24px;
+        }
+        .form-section h2 { margin-top: 0; color: #1a3a52; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; margin-bottom: 4px; font-weight: 600; color: #333; }
+        .form-group input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+        .form-group input:focus { outline: none; border-color: #1976d2; box-shadow: 0 0 0 2px rgba(25,118,210,0.2); }
+        button[type="submit"] {
+            background: #2e7d32;
+            color: #fff;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        button[type="submit"]:hover { background: #1b5e20; }
+        .info {
+            background: #e7f3ff;
+            padding: 16px;
+            border-radius: 6px;
+            margin-top: 20px;
+            font-size: 0.9rem;
+        }
+        /* ——— Чат ——— */
+        #chat-trigger {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: #1976d2;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            font-size: 24px;
+            line-height: 1;
+            z-index: 1000;
+        }
+        #chat-trigger:hover { background: #1565c0; }
+        #chat-panel {
+            display: none;
+            position: fixed;
+            bottom: 90px;
+            right: 24px;
+            width: 380px;
+            max-width: calc(100vw - 48px);
+            height: 480px;
+            max-height: 70vh;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+            flex-direction: column;
+            z-index: 1001;
+            overflow: hidden;
+        }
+        #chat-panel.open { display: flex; }
+        #chat-header {
+            padding: 14px 16px;
+            background: #1976d2;
+            color: #fff;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #chat-close { background: none; border: none; color: #fff; cursor: pointer; font-size: 20px; padding: 0 4px; }
+        #chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background: #f5f5f5;
+        }
+        .chat-msg {
+            max-width: 85%;
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
+        .chat-msg.user {
+            align-self: flex-end;
+            background: #1976d2;
+            color: #fff;
+        }
+        .chat-msg.assistant {
+            align-self: flex-start;
+            background: #fff;
+            border: 1px solid #e0e0e0;
+        }
+        .chat-msg .time { font-size: 0.75rem; opacity: 0.8; margin-top: 4px; }
+        .chat-media { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 10px; }
+        .chat-media figure { margin: 0; max-width: 200px; }
+        .chat-media-img { max-width: 100%; max-height: 180px; border-radius: 8px; object-fit: cover; display: block; }
+        .chat-media-doc { display: inline-block; padding: 6px 12px; background: #e3f2fd; color: #1565c0; border-radius: 6px; text-decoration: none; font-size: 0.9rem; margin-right: 8px; margin-bottom: 4px; }
+        .chat-media-doc:hover { background: #bbdefb; }
+        .chat-media figcaption { font-size: 0.8rem; color: #555; margin-top: 4px; }
+        #chat-input-wrap {
+            padding: 12px;
+            background: #fff;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 8px;
+        }
+        #chat-input {
+            flex: 1;
+            padding: 10px 14px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 0.95rem;
+        }
+        #chat-send {
+            padding: 10px 18px;
+            background: #1976d2;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        #chat-send:hover { background: #1565c0; }
+        #chat-send:disabled { opacity: 0.6; cursor: not-allowed; }
+        .chat-typing { align-self: flex-start; color: #666; font-size: 0.9rem; padding: 8px 0; }
+        .activation-block {
+            background: #fff;
+            border: 1px solid #1976d2;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+        .activation-block h2 { margin-top: 0; color: #1565c0; font-size: 1.15rem; }
+        .activation-ways { margin: 12px 0; padding-left: 20px; }
+        .activation-ways li { margin: 6px 0; }
+        .backend-config {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #e0e0e0;
+        }
+        .backend-config label { display: block; margin: 8px 0 2px 0; font-weight: 600; font-size: 0.9rem; }
+        .backend-config input[type="radio"] { margin-right: 8px; }
+        .backend-config input[type="text"], .backend-config input[type="url"] {
+            width: 100%;
+            max-width: 480px;
+            padding: 8px 10px;
+            margin-bottom: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.85rem;
+        }
+        .backend-config .row { margin: 6px 0; }
+        .backend-config .hint { font-size: 0.8rem; color: #666; margin-top: 2px; }
+    </style>
+</head>
+<body>
+    <h1>Коттеджный посёлок</h1>
+    <div class="intro">
+        <p>Дома с черновой и стандартной отделкой. Ипотека, рассрочка, скидки при полной оплате. Персональный подход к каждому клиенту.</p>
+        <p style="margin-top: 12px;"><a href="/lk/login.html" style="color: #1565c0; font-weight: 600;">Личный кабинет</a> — вход по логину и паролю (чат с агентом по КП, договорам, деталям).</p>
+    </div>
+
+    <div class="activation-block">
+        <h2>Способы активации агента</h2>
+        <ol class="activation-ways">
+            <li><strong>Каталог</strong> — нажмите «Узнать условия / Чат с консультантом» на любой карточке ниже: откроется чат с контекстом объекта (черновая/стандартная отделка, цена, ипотека, скидки).</li>
+            <li><strong>Кнопка «Чат»</strong> — внизу справа: открывает чат без привязки к объекту.</li>
+            <li><strong>Форма заявки</strong> — внизу страницы: ввод телефона/email отправляет события в выбранный бэкенд (n8n или далее в amoCRM при прямом режиме).</li>
+        </ol>
+        <div class="backend-config">
+            <div class="row">
+                <label>Чат с нейропродажником — куда отправлять сообщения:</label>
+                <label><input type="radio" name="chat_backend" value="n8n" checked> n8n flow (агент + CRM)</label>
+                <label><input type="radio" name="chat_backend" value="agent_direct"> Сервис агента с KB → далее FastAPI amoCRM</label>
+            </div>
+            <div class="row" id="row-n8n">
+                <label for="cfg-n8n">URL n8n webhook (чат и форма):</label>
+                <input type="text" id="cfg-n8n" placeholder="при открытии с :8000 подставится http://localhost:8000/api/n8n-proxy">
+                <div class="hint">Чтобы данные доходили до n8n: откройте страницу с <strong>http://localhost:8000/...</strong> и запустите <code>python site-integration/serve_with_proxy.py</code> — тогда подставится <code>http://localhost:8000/api/n8n-proxy</code>. Или укажите прямой URL n8n: <code>http://localhost:5678/webhook/sales-agent-kb</code> (n8n должен быть запущен, workflow включён).</div>
+            </div>
+            <div class="row" id="row-agent" style="display:none">
+                <label for="cfg-agent">URL API агента (POST /api/chat):</label>
+                <input type="text" id="cfg-agent" placeholder="http://localhost:8003 или http://brats.local:8003">
+                <div class="hint">Сервис с KB: принимает message, conversation_id, channel; возвращает response / agent_response. Далее контакт/сделка — через FastAPI amoCRM.</div>
+                <label for="cfg-amocrm">URL FastAPI amoCRM (опц., для заявок с формы):</label>
+                <input type="text" id="cfg-amocrm" placeholder="http://localhost:8010 или http://brats.local:8010">
+                <div class="hint">amocrm-api: при отправке формы можно создавать тестовый лид (POST /api/test-leads) или контакт.</div>
+            </div>
+        </div>
+    </div>
+
+    <h2>Каталог</h2>
+    <div class="catalog" id="catalog">
+        <div class="card" data-product='{"id":"1","name":"Дом 120 м²","finishing":"black_box","price":7500000,"mortgage":true,"discount_note":"Скидка при 100% оплате"}'>
+            <span class="badge">Черновая отделка</span>
+            <h3>Дом 120 м²</h3>
+            <div class="price">7 500 000 ₽</div>
+            <div class="features">Участок 6 соток. Ипотека. Скидка при 100% оплате.</div>
+            <button type="button" class="btn-chat" data-open-chat="1">Узнать условия / Чат с консультантом</button>
+        </div>
+        <div class="card" data-product='{"id":"2","name":"Дом 150 м²","finishing":"standard","price":9500000,"land_area":"8 соток","mortgage":true,"installment":true,"discount_note":"Скидка при полной оплате"}'>
+            <span class="badge standard">Стандартная отделка</span>
+            <h3>Дом 150 м²</h3>
+            <div class="price">9 500 000 ₽</div>
+            <div class="features">Участок 8 соток. Ипотека, рассрочка. Скидка при полной оплате.</div>
+            <button type="button" class="btn-chat" data-open-chat="2">Узнать условия / Чат с консультантом</button>
+        </div>
+        <div class="card" data-product='{"id":"3","name":"Участок 10 соток","finishing":"land","price":2500000,"mortgage":true}'>
+            <span class="badge">Участок</span>
+            <h3>Участок 10 соток</h3>
+            <div class="price">2 500 000 ₽</div>
+            <div class="features">Коммуникации. Ипотека на землю.</div>
+            <button type="button" class="btn-chat" data-open-chat="3">Узнать условия / Чат с консультантом</button>
+        </div>
+    </div>
+
+    <div class="form-section">
+        <h2>Или оставьте заявку</h2>
+        <p>При вводе телефона или email автоматически отправляется событие в n8n для инициации нейропродажника. В чате выше можно обсудить условия, ипотеку и скидки.</p>
+        <form id="reservation-form" data-form-type="reservation_cottage">
+            <div class="form-group">
+                <label for="name">Имя:</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+            <div class="form-group">
+                <label for="phone">Телефон:</label>
+                <input type="tel" id="phone" name="phone" placeholder="+7 (999) 123-45-67" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" placeholder="example@mail.ru" required>
+            </div>
+            <button type="submit">Отправить заявку</button>
+        </form>
+        <div id="form-feedback" style="display:none; margin-top:12px; padding:12px; border-radius:6px; font-weight:500;"></div>
+        <div class="info">
+            <strong>Песочница:</strong> для реалистичных сюжетов откройте чат, «побродите» по каталогу, обсудите с консультантом коттедж (черновая/стандартная отделка), оплату, скидки и ипотеку — затем оставьте телефон и email в чате или в форме. События уходят в аналитику (нейроаналитик) и при настройке webhook — в нейропродажника и amoCRM.
+        </div>
+    </div>
+
+    <!-- Кнопка открытия чата -->
+    <button type="button" id="chat-trigger" title="Чат с консультантом">💬</button>
+    <!-- Панель чата -->
+    <div id="chat-panel">
+        <div id="chat-header">
+            <span>Чат с консультантом</span>
+            <button type="button" id="chat-close" title="Закрыть">×</button>
+        </div>
+        <div id="chat-messages"></div>
+        <div id="chat-backend-hint" style="padding:6px 12px;background:#f5f5f5;font-size:0.8rem;color:#555;border-top:1px solid #eee;"></div>
+        <div id="chat-input-wrap">
+            <input type="text" id="chat-input" placeholder="Напишите сообщение..." autocomplete="off">
+            <button type="button" id="chat-send">Отправить</button>
+        </div>
+    </div>
+
+    <!-- ============================================
+         ИНТЕГРАЦИЯ: аналитика + n8n webhook + чат с нейропродажником
+         Позже: те же события для нейроаналитика (отчёты, сюжеты)
+         ============================================ -->
+    <script>
+    (function() {
+        'use strict';
+
+        const CONFIG = {
+            internalAnalyticsUrl: 'http://localhost:8002/api/analytics/collect',
+            enableInternalAnalytics: false,  // true — когда sales-analytic запущен на :8002
+            debugAnalytics: false,
+            yandexMetrikaId: 106736061,
+            channel: 'site',
+            enableYandexMetrika: true,
+            defaultScenario: {
+                scenario: 'cottage_purchase',
+                options: { finishing: ['black_box', 'standard'], payment: ['full', 'installment', 'mortgage'], discount: true }
+            }
+        };
+
+        function getChatBackend() {
+            var r = document.querySelector('input[name="chat_backend"]:checked');
+            return r ? r.value : 'n8n';
+        }
+        function getN8nUrl() {
+            var u = document.getElementById('cfg-n8n');
+            var v = u && u.value ? u.value.trim() : '';
+            if (!v && u) {
+                var host = window.location.hostname || 'localhost';
+                var port = window.location.port || '80';
+                var protocol = window.location.protocol || 'http:';
+                // Прокси на том же хосте (8000) — same-origin, без CORS; host не меняем (0.0.0.0 ок)
+                if (port === '8000' || port === '8001')
+                    v = protocol + '//' + host + ':' + port + '/api/n8n-proxy';
+                else {
+                    if (host === '0.0.0.0' || host === '') host = 'localhost';
+                    v = protocol + '//' + host + ':5678/webhook/sales-agent-kb';
+                }
+            }
+            // Для прямого вызова n8n (5678) 0.0.0.0 заменить на localhost; для прокси не трогать
+            if (v && v.indexOf('/api/n8n-proxy') === -1 && v.indexOf('0.0.0.0') !== -1)
+                v = v.replace(/0\.0\.0\.0/g, 'localhost');
+            return v;
+        }
+        function getAgentUrl() {
+            var u = document.getElementById('cfg-agent');
+            return u && u.value ? u.value.trim().replace(/\/+$/, '') : '';
+        }
+        function getAmocrmUrl() {
+            var u = document.getElementById('cfg-amocrm');
+            return u && u.value ? u.value.trim().replace(/\/+$/, '') : '';
+        }
+
+        document.querySelectorAll('input[name="chat_backend"]').forEach(function(radio) {
+            radio.addEventListener('change', function() {
+                document.getElementById('row-n8n').style.display = getChatBackend() === 'n8n' ? 'block' : 'none';
+                document.getElementById('row-agent').style.display = getChatBackend() === 'agent_direct' ? 'block' : 'none';
+                updateChatBackendHint();
+            });
+        });
+        ['cfg-n8n', 'cfg-agent'].forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('input', updateChatBackendHint);
+                el.addEventListener('change', updateChatBackendHint);
+            }
+        });
+
+        function getVisitorId() {
+            let v = localStorage.getItem('brats_visitor_id');
+            if (!v) {
+                v = 'visitor_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('brats_visitor_id', v);
+            }
+            return v;
+        }
+        function getSessionId() {
+            let s = sessionStorage.getItem('brats_session_id');
+            if (!s) {
+                s = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                sessionStorage.setItem('brats_session_id', s);
+            }
+            return s;
+        }
+        function normalizePhone(phone) { return String(phone).replace(/\D/g, ''); }
+        function isValidEmail(email) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email); }
+        function isValidPhone(phone) { return normalizePhone(phone).length >= 10; }
+
+        async function sendToN8N(eventData) {
+            var url = getN8nUrl();
+            if (!url) return;
+            try {
+                await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message: eventData.message || 'Сообщение с сайта',
+                        channel: CONFIG.channel,
+                        external_id: getVisitorId(),
+                        metadata: {
+                            visitor_id: getVisitorId(),
+                            session_id: getSessionId(),
+                            event_type: eventData.eventType,
+                            form_type: eventData.formType || 'unknown',
+                            phone: eventData.phone ? normalizePhone(eventData.phone) : null,
+                            email: eventData.email || null,
+                            page_url: window.location.href,
+                            page_title: document.title,
+                            user_agent: navigator.userAgent,
+                            timestamp: new Date().toISOString(),
+                            real_estate_context: eventData.real_estate_context || null,
+                            scenario: eventData.scenario || CONFIG.defaultScenario,
+                            ...(eventData.metadata || {})
+                        }
+                    })
+                });
+            } catch (e) { console.error('N8N:', e); }
+        }
+
+        async function sendToInternalAnalytics(eventType, extraData) {
+            if (!CONFIG.enableInternalAnalytics || !CONFIG.internalAnalyticsUrl) return;
+            try {
+                await fetch(CONFIG.internalAnalyticsUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        event_type: eventType,
+                        visitor_id: getVisitorId(),
+                        session_id: getSessionId(),
+                        source: 'site_integration',
+                        event_data: {
+                            page_url: window.location.href,
+                            page_title: document.title,
+                            timestamp: new Date().toISOString(),
+                            ...(extraData || {})
+                        }
+                    })
+                });
+            } catch (e) {
+                if (CONFIG.debugAnalytics) console.warn('Analytics (сервис недоступен):', CONFIG.internalAnalyticsUrl, e.message);
+            }
+        }
+
+        function sendToYandexMetrika(eventName, params) {
+            if (!CONFIG.enableYandexMetrika || !CONFIG.yandexMetrikaId) return;
+            try {
+                if (typeof ym !== 'undefined') ym(CONFIG.yandexMetrikaId, 'reachGoal', eventName, params || {});
+            } catch (e) {}
+        }
+
+        // ——— Чат с нейропродажником ———
+        let chatProductContext = null;
+
+        function appendMessage(role, text, media) {
+            const wrap = document.getElementById('chat-messages');
+            const div = document.createElement('div');
+            div.className = 'chat-msg ' + role;
+            const time = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+            div.innerHTML = '<span class="text"></span><div class="time">' + time + '</div>';
+            div.querySelector('.text').textContent = text;
+            if (role === 'assistant' && media && (media.images?.length || media.documents?.length)) {
+                const mediaWrap = document.createElement('div');
+                mediaWrap.className = 'chat-media';
+                if (media.images && media.images.length) {
+                    media.images.forEach(function (item) {
+                        const url = item.url || (typeof item === 'string' ? item : null);
+                        if (!url) return;
+                        const img = document.createElement('img');
+                        img.src = url;
+                        img.alt = item.alt || item.description || '';
+                        img.className = 'chat-media-img';
+                        img.loading = 'lazy';
+                        img.onerror = function () { img.style.display = 'none'; };
+                        const cap = item.description || item.alt;
+                        if (cap) {
+                            const fig = document.createElement('figure');
+                            fig.appendChild(img);
+                            fig.appendChild(document.createElement('figcaption')).textContent = cap;
+                            mediaWrap.appendChild(fig);
+                        } else mediaWrap.appendChild(img);
+                    });
+                }
+                if (media.documents && media.documents.length) {
+                    media.documents.forEach(function (item) {
+                        const url = item.url || (typeof item === 'string' ? item : null);
+                        if (!url) return;
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.target = '_blank';
+                        a.rel = 'noopener';
+                        a.className = 'chat-media-doc';
+                        a.textContent = item.title || 'Документ';
+                        mediaWrap.appendChild(a);
+                    });
+                }
+                div.appendChild(mediaWrap);
+            }
+            wrap.appendChild(div);
+            wrap.scrollTop = wrap.scrollHeight;
+        }
+
+        function setTyping(show) {
+            let el = document.getElementById('chat-typing');
+            if (show && !el) {
+                el = document.createElement('div');
+                el.id = 'chat-typing';
+                el.className = 'chat-typing';
+                el.textContent = 'Консультант печатает...';
+                document.getElementById('chat-messages').appendChild(el);
+                document.getElementById('chat-messages').scrollTop = 1e6;
+            }
+            if (el) el.style.display = show ? 'block' : 'none';
+        }
+
+        async function sendChatMessage(text) {
+            if (!text || !text.trim()) return;
+            const msg = text.trim();
+            appendMessage('user', msg);
+            document.getElementById('chat-input').value = '';
+
+            sendToInternalAnalytics('chat_message_sent', {
+                message_length: msg.length,
+                has_product_context: !!chatProductContext,
+                real_estate_context: chatProductContext || undefined
+            });
+            sendToYandexMetrika('chat_message');
+
+            var backend = getChatBackend();
+            var n8nUrl = getN8nUrl();
+            var agentUrl = getAgentUrl();
+            if (backend === 'n8n' && !n8nUrl) {
+                appendMessage('assistant', 'Укажите URL n8n webhook выше (например http://brats.local:5678/webhook/sales-agent-kb) и выберите «n8n flow».');
+                return;
+            }
+            if (backend === 'agent_direct' && !agentUrl) {
+                appendMessage('assistant', 'Выберите «Сервис агента с KB» и укажите URL API агента (сервис с POST /api/chat).');
+                return;
+            }
+
+            setTyping(true);
+            document.getElementById('chat-send').disabled = true;
+            try {
+                var res, data;
+                if (backend === 'n8n') {
+                    var payload = {
+                        message: msg,
+                        channel: CONFIG.channel,
+                        external_id: getVisitorId(),
+                        metadata: {
+                            visitor_id: getVisitorId(),
+                            session_id: getSessionId(),
+                            event_type: 'chat_message',
+                            page_url: window.location.href,
+                            page_title: document.title,
+                            timestamp: new Date().toISOString(),
+                            real_estate_context: chatProductContext,
+                            scenario: CONFIG.defaultScenario
+                        }
+                    };
+                    console.log('[Чат] Отправка в n8n:', n8nUrl, payload);
+                    res = await fetch(n8nUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    console.log('[Чат] Ответ n8n:', res.status, res.statusText);
+                    var rawText = await res.text();
+                    try {
+                        data = rawText ? JSON.parse(rawText) : {};
+                    } catch (e) {
+                        data = { _raw: rawText ? rawText.substring(0, 500) : '(пусто)' };
+                    }
+                    console.log('[Чат] Тело ответа:', data);
+                } else {
+                    var chatPayload = {
+                        message: msg,
+                        conversation_id: getVisitorId(),
+                        channel: CONFIG.channel,
+                        metadata: {
+                            real_estate_context: chatProductContext,
+                            scenario: CONFIG.defaultScenario,
+                            page_url: window.location.href
+                        }
+                    };
+                    res = await fetch(agentUrl + '/api/chat', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(chatPayload)
+                    });
+                    data = await res.json().catch(function() { return {}; });
+                }
+                var reply = data.agent_response || data.response || data.message;
+                if (!reply && data._raw) reply = 'Ответ n8n (не JSON): ' + data._raw;
+                if (!reply) {
+                    var debug = (data.error && data.message) ? (data.message + (data.error ? ' (' + data.error + ')' : '')) : (data._raw ? data._raw : (typeof data === 'object' && Object.keys(data).length > 0 ? JSON.stringify(data).substring(0, 400) : 'пустой ответ'));
+                    reply = 'Не удалось получить ответ от цепочки n8n. ' + (debug !== 'пустой ответ' ? 'Отладка: ' + debug : 'n8n вернул пустое тело. Проверьте: 1) В n8n → Executions — откройте последний запуск, посмотрите, на каком узле ошибка (KB Search / Sales Agent Call). 2) Узел Webhook → в настройках «Respond» должен быть «Using Respond to Webhook Node». 3) Workflow с localhost: workflows/sales-agent-kb-integration-localhost.json.');
+                }
+                appendMessage('assistant', reply, data.media || undefined);
+            } catch (e) {
+                console.error('Chat request failed:', e);
+                var errMsg = 'Данные не дошли до n8n. Ошибка: ' + (e.message || 'сеть или CORS').replace(/^Failed to fetch/i, 'запрос не выполнен');
+                var urlUsed = backend === 'n8n' ? n8nUrl : agentUrl;
+                appendMessage('assistant', errMsg + ' Адрес запроса: ' + (urlUsed || 'не задан') + '. Что сделать: (1) Откройте страницу с http://localhost:8000 и запустите в терминале: python site-integration/serve_with_proxy.py — тогда чат будет слать на http://localhost:8000/api/n8n-proxy. (2) Либо укажите прямой URL n8n в настройках (например http://localhost:5678/webhook/sales-agent-kb) и убедитесь, что n8n запущен, workflow включён (Active).');
+            } finally {
+                setTyping(false);
+                document.getElementById('chat-send').disabled = false;
+            }
+        }
+
+        function updateChatBackendHint() {
+            var el = document.getElementById('chat-backend-hint');
+            if (!el) return;
+            var backend = getChatBackend();
+            var url = backend === 'n8n' ? getN8nUrl() : getAgentUrl();
+            if (backend === 'n8n') {
+                var hint = url ? ('Чат → n8n: ' + url) : 'Чат → n8n: не задан (укажите URL выше или откройте страницу с http://localhost:8000)';
+                el.textContent = hint;
+                el.title = url ? 'Запросы уходят на этот адрес. Если данные не доходят — проверьте, что сервис доступен и workflow включён.' : '';
+            } else {
+                el.textContent = 'Чат → агент: ' + (url || 'не задан');
+            }
+        }
+
+        function openChat(productContext) {
+            chatProductContext = productContext || null;
+            document.getElementById('chat-panel').classList.add('open');
+            updateChatBackendHint();
+            sendToInternalAnalytics('chat_opened', {
+                real_estate_context: chatProductContext || undefined
+            });
+            sendToYandexMetrika('chat_open');
+            if (document.getElementById('chat-messages').children.length === 0) {
+                appendMessage('assistant', 'Здравствуйте! Я консультант по коттеджному посёлку. Можем обсудить дома с черновой или стандартной отделкой, ипотеку, рассрочку и скидки при полной оплате. Чем интересуюсь?');
+            }
+        }
+
+        document.getElementById('chat-trigger').addEventListener('click', function() {
+            openChat(null);
+        });
+        document.getElementById('chat-close').addEventListener('click', function() {
+            document.getElementById('chat-panel').classList.remove('open');
+        });
+        document.getElementById('chat-send').addEventListener('click', function() {
+            sendChatMessage(document.getElementById('chat-input').value);
+        });
+        document.getElementById('chat-input').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendChatMessage(this.value);
+            }
+        });
+
+        document.querySelectorAll('.btn-chat[data-open-chat]').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                const card = this.closest('.card');
+                const productJson = card && card.getAttribute('data-product');
+                const productContext = productJson ? JSON.parse(productJson) : null;
+                openChat(productContext);
+            });
+        });
+
+        // ——— Форма и трекинг телефона/email (как раньше) ———
+        function handlePhoneInput(input) {
+            const phone = input.value;
+            if (phone.length < 10) return;
+            if (!isValidPhone(phone)) return;
+            sendToN8N({
+                eventType: 'phone_input',
+                phone: phone,
+                message: 'Пользователь ввел телефон в форму',
+                formType: input.closest('form')?.getAttribute('data-form-type') || 'unknown',
+                metadata: { form_id: input.closest('form')?.id || null }
+            });
+            sendToYandexMetrika('phone_input', { form_type: input.closest('form')?.getAttribute('data-form-type') || 'unknown' });
+            sendToInternalAnalytics('phone_input', { form_type: input.closest('form')?.getAttribute('data-form-type') || 'unknown', phone: normalizePhone(phone) });
+        }
+        function handleEmailInput(input) {
+            const email = input.value;
+            if (!isValidEmail(email)) return;
+            sendToN8N({
+                eventType: 'email_input',
+                email: email,
+                message: 'Пользователь ввел email в форму',
+                formType: input.closest('form')?.getAttribute('data-form-type') || 'unknown',
+                metadata: { form_id: input.closest('form')?.id || null }
+            });
+            sendToYandexMetrika('email_input', { form_type: input.closest('form')?.getAttribute('data-form-type') || 'unknown' });
+            sendToInternalAnalytics('email_input', { form_type: input.closest('form')?.getAttribute('data-form-type') || 'unknown', email: email });
+        }
+        function showFormFeedback(message, isError) {
+            var el = document.getElementById('form-feedback');
+            if (!el) return;
+            el.textContent = message;
+            el.style.display = 'block';
+            el.style.background = isError ? '#ffebee' : '#e8f5e9';
+            el.style.color = isError ? '#c62828' : '#2e7d32';
+        }
+
+        function openChatAndSendFormMessage(name, phone, email) {
+            document.getElementById('chat-panel').classList.add('open');
+            var firstMsg = 'Я оставил заявку: ' + (name || '') + ', тел. ' + (phone || '') + (email ? ', email ' + email : '') + '. Хочу обсудить условия, ипотеку и скидки.';
+            sendChatMessage(firstMsg);
+        }
+
+        function handleFormSubmit(ev, form) {
+            if (ev && ev.preventDefault) ev.preventDefault();
+            var formData = new FormData(form);
+            var phone = (formData.get('phone') || formData.get('tel') || '').toString().trim();
+            var email = (formData.get('email') || '').toString().trim();
+            var name = (formData.get('name') || 'Заявка с сайта').toString().trim() || 'Заявка с сайта';
+            var formType = form.getAttribute('data-form-type') || 'unknown';
+            var phoneNorm = normalizePhone(phone);
+
+            if (!isValidPhone(phone)) {
+                showFormFeedback('Введите корректный телефон (минимум 10 цифр).', true);
+                return;
+            }
+
+            sendToN8N({
+                eventType: 'form_submit',
+                phone: phone,
+                email: email,
+                message: 'Заявка с формы: ' + name + ', тел. ' + (phoneNorm || '') + (email ? ', email ' + email : ''),
+                formType: formType,
+                metadata: { form_id: form.id || null, name: name }
+            });
+            sendToYandexMetrika('form_submit', { form_type: formType });
+            sendToInternalAnalytics('form_submit', { form_type: formType, phone: phoneNorm || null, email: email || null });
+
+            var amocrmUrl = getAmocrmUrl();
+            var amocrmBase = (amocrmUrl && amocrmUrl.trim()) ? amocrmUrl.trim().replace(/\/+$/, '') : (window.location.origin + '/api/amocrm');
+            var leadUrl = amocrmBase.indexOf('/api/amocrm') !== -1
+                ? amocrmBase + '/test-lead-from-chat'
+                : amocrmBase + '/api/test-lead-from-chat';
+            var noteText = 'Заявка с формы: ' + name + ', тел. ' + phoneNorm + (email ? ', email ' + email : '') + '.';
+            fetch(leadUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: name,
+                    client_name: name,
+                    phone: phoneNorm,
+                    email: email || null,
+                    channel: 'site',
+                    external_id: getVisitorId(),
+                    note: noteText
+                })
+            })
+                .then(function(r) {
+                    if (r.ok) return r.json();
+                    return r.text().then(function(t) { throw new Error(t || r.status); });
+                })
+                .then(function(data) {
+                    if (data.created !== false) {
+                        var hint = 'Заявка отправлена. Лид и контакт созданы в amoCRM. ';
+                        if (data.lead_name || data.phone) {
+                            hint += 'В amoCRM ищите: сделку «' + (data.lead_name || '') + '» или контакт по тел. ' + (data.phone || phoneNorm) + '.';
+                            if (data.contact_first_name || data.contact_last_name) {
+                                hint += ' Контакт отображается как Имя: ' + (data.contact_first_name || '') + (data.contact_last_name ? ', Фамилия: ' + data.contact_last_name : '') + '.';
+                            }
+                        } else {
+                            hint += 'С вами свяжутся.';
+                        }
+                        hint += ' В чате справа — ответ консультанта.';
+                        showFormFeedback(hint, false);
+                    } else {
+                        showFormFeedback('Заявка принята (для этого посетителя лид уже был создан). В чате справа — ответ консультанта.', false);
+                    }
+                    openChatAndSendFormMessage(name, phoneNorm || phone, email);
+                })
+                .catch(function(e) {
+                    console.warn('amocrm test-lead-from-chat:', e);
+                    showFormFeedback('Заявка отправлена в чат. Контакт и лид в amoCRM не созданы (ошибка: сервис 8010 или amoCRM недоступны). Проверьте amocrm-api и config.env. В чате справа — ответ консультанта.', false);
+                    openChatAndSendFormMessage(name, phoneNorm || phone, email);
+                });
+        }
+
+        function initTracking() {
+            document.querySelectorAll('input[type="tel"], input[name*="phone"], input[name*="tel"], input[id*="phone"]').forEach(function(input) {
+                var t;
+                input.addEventListener('input', function() {
+                    clearTimeout(t);
+                    t = setTimeout(function() { handlePhoneInput(input); }, 1000);
+                });
+            });
+            document.querySelectorAll('input[type="email"], input[name*="email"], input[id*="email"]').forEach(function(input) {
+                var t;
+                input.addEventListener('input', function() {
+                    clearTimeout(t);
+                    t = setTimeout(function() { handleEmailInput(input); }, 1000);
+                });
+            });
+            document.querySelectorAll('form').forEach(function(form) {
+                form.addEventListener('submit', function(ev) { handleFormSubmit(ev, form); });
+            });
+        }
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initTracking);
+        } else {
+            initTracking();
+        }
+        (function setDefaultUrls() {
+            var host = window.location.hostname || '';
+            var port = window.location.port || '';
+            var protocol = window.location.protocol || 'http:';
+            var origin = protocol + '//' + (host === '0.0.0.0' ? 'localhost' : host) + (port ? ':' + port : '');
+            var n8nIn = document.getElementById('cfg-n8n');
+            var agentIn = document.getElementById('cfg-agent');
+            var amocrmIn = document.getElementById('cfg-amocrm');
+            if (n8nIn && !n8nIn.value.trim()) {
+                if (port === '8000' && (host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0'))
+                    n8nIn.value = (host === '0.0.0.0' ? protocol + '//localhost:8000' : origin) + '/api/n8n-proxy';
+                else if (protocol === 'file:' || !host || host === '')
+                    n8nIn.value = 'http://localhost:8000/api/n8n-proxy';
+                else
+                    n8nIn.value = (host === 'brats.local' ? 'http://brats.local:5678/webhook/sales-agent-kb' : (origin.replace(/:\d+$/, '') + ':5678/webhook/sales-agent-kb'));
+            }
+            if (agentIn && !agentIn.value) agentIn.placeholder = (host === 'brats.local' ? 'http://brats.local:8003' : 'http://localhost:8003') + ' (сервис с POST /api/chat)';
+            if (amocrmIn && !amocrmIn.value) {
+                if (port === '8000' && (host === 'localhost' || host === '127.0.0.1'))
+                    amocrmIn.value = origin + '/api/amocrm';
+                else
+                    amocrmIn.placeholder = (host === 'brats.local' ? 'http://brats.local:8010' : 'http://localhost:8010');
+            }
+        })();
+    })();
+    </script>
+
+    <script type="text/javascript">
+    (function(m,e,t,r,i,k,a){
+        m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+        m[i].l=1*new Date();
+        k=e.createElement(t);a=e.getElementsByTagName(t)[0];k.async=1;k.src=r;a.parentNode.insertBefore(k,a);
+    })(window,document,"script","https://mc.yandex.ru/metrika/tag.js","ym");
+    ym(106736061,"init",{webvisor:true,clickmap:true,trackLinks:true,accurateTrackBounce:true});
+    </script>
+    <noscript><div><img src="https://mc.yandex.ru/watch/106736061" style="position:absolute;left:-9999px;" alt=""/></div></noscript>
+</body>
+</html>

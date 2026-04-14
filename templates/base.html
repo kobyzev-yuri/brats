@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}KB Admin{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+    <style>
+        .sidebar {
+            min-height: 100vh;
+            background-color: #f8f9fa;
+        }
+        .main-content {
+            padding: 20px;
+        }
+        .block-card {
+            transition: transform 0.2s;
+        }
+        .block-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .inactive {
+            opacity: 0.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav class="col-md-3 col-lg-2 sidebar">
+                <div class="position-sticky pt-3">
+                    <h4 class="px-3">KB Admin</h4>
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('blocks_list') }}">
+                                <i class="bi bi-list-ul"></i> Блоки
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('duplicates_list') }}">
+                                <i class="bi bi-files"></i> Дубликаты
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('statistics') }}">
+                                <i class="bi bi-bar-chart"></i> Статистика
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('reprocess_page') }}">
+                                <i class="bi bi-arrow-repeat"></i> Вторичная обработка
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- Main content -->
+            <main class="col-md-9 col-lg-10 main-content">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Функция для массовых операций
+        function markInactive(blockIds) {
+            if (!confirm(`Пометить ${blockIds.length} блоков как неактивные?`)) return;
+            
+            fetch('/api/blocks/mark-inactive', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({block_ids: blockIds})
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    location.reload();
+                } else {
+                    alert('Ошибка: ' + data.error);
+                }
+            });
+        }
+
+        function markActive(blockIds) {
+            if (!confirm(`Пометить ${blockIds.length} блоков как активные?`)) return;
+            
+            fetch('/api/blocks/mark-active', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({block_ids: blockIds})
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    location.reload();
+                } else {
+                    alert('Ошибка: ' + data.error);
+                }
+            });
+        }
+
+        function deleteBlocks(blockIds) {
+            if (!confirm(`УДАЛИТЬ ${blockIds.length} блоков? Это действие необратимо!`)) return;
+            if (!confirm('Вы уверены? Блоки будут удалены навсегда!')) return;
+            
+            fetch('/api/blocks/delete', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({block_ids: blockIds, create_backup: true})
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    location.reload();
+                } else {
+                    alert('Ошибка: ' + data.error);
+                }
+            });
+        }
+
+        // Глобальная функция для вторичной обработки блоков
+        window.reprocessBlocks = function(blockIds) {
+            if (!blockIds || blockIds.length === 0) {
+                alert('Не указаны блоки для обработки');
+                return;
+            }
+            // Перенаправить на страницу вторичной обработки
+            const idsParam = blockIds.join(',');
+            window.location.href = `/reprocess?block_ids=${idsParam}`;
+        };
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>
+

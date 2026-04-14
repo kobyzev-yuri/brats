@@ -1,0 +1,68 @@
+# Python
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# Environment variables
+config.env
+.env
+*.env
+!*.env.example
+amocrm.txt
+brats_api.txt
+brats-metrika-api.txt
+
+# IDE
+.cursor/
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# n8n
+.n8n/
+n8n/.n8n/
+n8n/.n8n-local/
+
+# Database
+*.db
+*.sqlite
+
+# Temporary files
+*.tmp
+*.bak
+
+# start_all_services.sh state
+.brats_pids
+.brats_logs/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

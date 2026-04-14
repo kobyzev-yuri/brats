@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: n8n-brats
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    extra_hosts:
+      - "${N8N_EXTRA_HOSTS:-host.docker.internal:host-gateway}"
+    env_file:
+      - ../config.env
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=${N8N_BASIC_AUTH_ACTIVE:-false}
+      - N8N_BASIC_AUTH_USER=${N8N_BASIC_AUTH_USER:-}
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_BASIC_AUTH_PASSWORD:-}
+      - N8N_HOST=${N8N_HOST:-0.0.0.0}
+      - N8N_PORT=${N8N_PORT:-5678}
+      - N8N_PROTOCOL=${N8N_PROTOCOL:-http}
+      - WEBHOOK_URL=${N8N_WEBHOOK_URL:-http://localhost:5678/}
+      - GENERIC_TIMEZONE=Europe/Moscow
+      - N8N_USER_MANAGEMENT_DISABLED=false
+      - N8N_USER_FIRST_NAME=${N8N_USER_FIRST_NAME:-Admin}
+      - N8N_USER_LAST_NAME=${N8N_USER_LAST_NAME:-User}
+      - N8N_USER_EMAIL=${N8N_USER_EMAIL:-admin@example.com}
+      - N8N_USER_PASSWORD=${N8N_USER_PASSWORD:-changeme}
+      - N8N_LICENSE_KEY=${N8N_LICENSE_KEY:-}
+      - N8N_BLOCK_ENV_ACCESS_IN_NODE=false
+      # CORS: разрешить запросы из чата на сайте (иначе браузер блокирует ответ при 200)
+      - N8N_CORS_ALLOW_ORIGIN=${N8N_CORS_ALLOW_ORIGIN:-*}
+      - AMOCRM_SUBDOMAIN=${AMOCRM_SUBDOMAIN:-}
+      - AMOCRM_ACCESS_TOKEN=${AMOCRM_ACCESS_TOKEN:-}
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./workflows:/home/node/.n8n/workflows
+    networks:
+      - brats-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:5678/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  n8n_data:
+    driver: local
+
+networks:
+  brats-network:
+    driver: bridge
+

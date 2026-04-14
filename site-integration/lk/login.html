@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вход в личный кабинет</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #e8f4f8 0%, #f0f7fa 100%);
+        }
+        .card {
+            background: #fff;
+            padding: 32px;
+            border-radius: 12px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+            width: 100%;
+            max-width: 380px;
+        }
+        h1 {
+            margin: 0 0 8px 0;
+            color: #1a3a52;
+            font-size: 1.5rem;
+        }
+        .subtitle {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 24px;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: #333;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #1976d2;
+            box-shadow: 0 0 0 2px rgba(25,118,210,0.2);
+        }
+        button[type="submit"] {
+            width: 100%;
+            padding: 12px;
+            background: #1976d2;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        button[type="submit"]:hover { background: #1565c0; }
+        button:disabled { opacity: 0.7; cursor: not-allowed; }
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            margin-bottom: 16px;
+            display: none;
+        }
+        .error.visible { display: block; }
+        .hint {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Личный кабинет</h1>
+        <p class="subtitle">Вход по логину и паролю (выданы при записи на просмотр)</p>
+        <div id="error" class="error"></div>
+        <form id="form">
+            <div class="form-group">
+                <label for="login">Логин (email или телефон)</label>
+                <input type="text" id="login" name="login" required autocomplete="username" placeholder="ivan@example.com или +79991234567">
+            </div>
+            <div class="form-group">
+                <label for="password">Пароль (номер телефона)</label>
+                <input type="password" id="password" name="password" required autocomplete="current-password" placeholder="+79991234567">
+            </div>
+            <button type="submit" id="btn">Войти</button>
+        </form>
+        <p class="hint">Логин и пароль были переданы вам в чате после записи на просмотр. Если не помните — обратитесь к менеджеру.</p>
+    </div>
+    <script>
+        (function() {
+            const API_BASE = ''; // тот же хост (например amocrm-api на 8010)
+            const form = document.getElementById('form');
+            const errorEl = document.getElementById('error');
+            const btn = document.getElementById('btn');
+
+            function showError(msg) {
+                errorEl.textContent = msg || 'Ошибка входа';
+                errorEl.classList.add('visible');
+            }
+            function hideError() {
+                errorEl.textContent = '';
+                errorEl.classList.remove('visible');
+            }
+
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                hideError();
+                btn.disabled = true;
+                const login = document.getElementById('login').value.trim();
+                const password = document.getElementById('password').value.trim();
+                if (!login || !password) {
+                    showError('Укажите логин и пароль');
+                    btn.disabled = false;
+                    return;
+                }
+                try {
+                    const r = await fetch(API_BASE + '/api/lk/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ login, password }),
+                    });
+                    const data = await r.json().catch(() => ({}));
+                    if (!r.ok) {
+                        showError(data.detail || 'Неверный логин или пароль');
+                        btn.disabled = false;
+                        return;
+                    }
+                    if (data.token) {
+                        localStorage.setItem('lk_token', data.token);
+                        window.location.href = 'cabinet.html';
+                        return;
+                    }
+                    showError('Ответ сервера без токена');
+                } catch (err) {
+                    showError('Ошибка сети: ' + (err.message || 'проверьте подключение'));
+                }
+                btn.disabled = false;
+            });
+        })();
+    </script>
+</body>
+</html>

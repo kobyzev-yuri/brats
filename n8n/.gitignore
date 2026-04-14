@@ -1,0 +1,27 @@
+# n8n данные
+.n8n/
+workflows/*.json
+!workflows/sales-agent-kb-integration.json
+
+# Логи
+*.log
+
+# Временные файлы
+*.tmp
+.DS_Store
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

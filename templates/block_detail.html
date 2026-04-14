@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Блок {{ block.id }} - KB Admin{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1>Блок #{{ block.id }}</h1>
+    <a href="{{ url_for('blocks_list') }}" class="btn btn-secondary">
+        <i class="bi bi-arrow-left"></i> Назад к списку
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5>Информация о блоке</h5>
+        <div>
+            {% if block.is_active %}
+                <span class="badge bg-success">Активен</span>
+                <button class="btn btn-sm btn-warning" onclick="markInactive([{{ block.id }}])">
+                    <i class="bi bi-x-circle"></i> Пометить как неактивный
+                </button>
+            {% else %}
+                <span class="badge bg-secondary">Неактивен</span>
+                <button class="btn btn-sm btn-success" onclick="markActive([{{ block.id }}])">
+                    <i class="bi bi-check-circle"></i> Пометить как активный
+                </button>
+            {% endif %}
+            <button class="btn btn-sm btn-primary" onclick="reprocessBlocks([{{ block.id }}])" title="Вторичная обработка">
+                <i class="bi bi-arrow-repeat"></i> Вторичная обработка
+            </button>
+            <button class="btn btn-sm btn-danger" onclick="deleteBlocks([{{ block.id }}])">
+                <i class="bi bi-trash"></i> Удалить
+            </button>
+        </div>
+    </div>
+    <div class="card-body">
+        <table class="table">
+            <tr>
+                <th width="200">ID</th>
+                <td>{{ block.id }}</td>
+            </tr>
+            <tr>
+                <th>Block ID</th>
+                <td><code>{{ block.block_id }}</code></td>
+            </tr>
+            <tr>
+                <th>Тип</th>
+                <td><span class="badge bg-secondary">{{ block.block_type }}</span></td>
+            </tr>
+            <tr>
+                <th>Вкладка</th>
+                <td>{{ block.tab_name or '-' }}</td>
+            </tr>
+            <tr>
+                <th>Статус</th>
+                <td>
+                    {% if block.is_active %}
+                        <span class="badge bg-success">Активен</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Неактивен</span>
+                    {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <th>Создан</th>
+                <td>{{ block.created_at.strftime('%Y-%m-%d %H:%M:%S') if block.created_at else '-' }}</td>
+            </tr>
+            <tr>
+                <th>Обновлен</th>
+                <td>{{ block.updated_at.strftime('%Y-%m-%d %H:%M:%S') if block.updated_at else '-' }}</td>
+            </tr>
+            {% if block.content_hash %}
+            <tr>
+                <th>Content Hash</th>
+                <td><code>{{ block.content_hash }}</code></td>
+            </tr>
+            {% endif %}
+            {% if block.content %}
+            <tr>
+                <th>Содержимое</th>
+                <td>
+                    <pre class="bg-light p-3 rounded">{{ block.content }}</pre>
+                </td>
+            </tr>
+            {% endif %}
+        </table>
+    </div>
+</div>
+{% endblock %}
+

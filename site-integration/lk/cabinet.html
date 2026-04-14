@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Личный кабинет — чат с агентом</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            min-height: 100vh;
+            background: #f5f5f5;
+        }
+        .header {
+            background: #1a3a52;
+            color: #fff;
+            padding: 14px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 { margin: 0; font-size: 1.2rem; }
+        .header .user { font-size: 0.9rem; opacity: 0.9; }
+        .header a {
+            color: #fff;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        .container {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .chat-panel {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 120px);
+            min-height: 400px;
+        }
+        #chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background: #fafafa;
+        }
+        .chat-msg {
+            max-width: 85%;
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
+        .chat-msg.user {
+            align-self: flex-end;
+            background: #1976d2;
+            color: #fff;
+        }
+        .chat-msg.assistant {
+            align-self: flex-start;
+            background: #fff;
+            border: 1px solid #e0e0e0;
+        }
+        .chat-msg .time { font-size: 0.75rem; opacity: 0.8; margin-top: 4px; }
+        .chat-input-wrap {
+            padding: 12px;
+            background: #fff;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 8px;
+        }
+        #chat-input {
+            flex: 1;
+            padding: 12px 14px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 0.95rem;
+        }
+        #chat-send {
+            padding: 12px 20px;
+            background: #1976d2;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        #chat-send:hover { background: #1565c0; }
+        #chat-send:disabled { opacity: 0.7; cursor: not-allowed; }
+        .welcome {
+            color: #666;
+            text-align: center;
+            padding: 24px;
+            font-size: 0.95rem;
+        }
+        .documents-section {
+            margin-top: 20px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            padding: 16px;
+        }
+        .documents-section h2 {
+            margin: 0 0 12px 0;
+            font-size: 1rem;
+            color: #1a3a52;
+        }
+        .documents-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .documents-list li {
+            margin-bottom: 8px;
+        }
+        .documents-list a, .documents-list button.link-style {
+            color: #1976d2;
+            text-decoration: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 0.95rem;
+            padding: 0;
+        }
+        .documents-list a:hover, .documents-list button.link-style:hover { text-decoration: underline; }
+        .documents-list .empty { color: #666; font-size: 0.9rem; }
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .modal-overlay.visible { display: flex; }
+        .modal-box {
+            background: #fff;
+            border-radius: 12px;
+            max-width: 90vw;
+            max-height: 85vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .modal-box h3 { margin: 0 0 12px 0; padding: 16px 16px 0; }
+        .modal-box .modal-body {
+            padding: 16px;
+            overflow: auto;
+            white-space: pre-wrap;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        .modal-box .modal-body.contract-html { white-space: normal; }
+        .modal-box .modal-close {
+            align-self: flex-end;
+            margin: 0 16px 16px 0;
+            padding: 8px 16px;
+            background: #1a3a52;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .deal-status-section, .slots-section, .uploaded-section {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        .deal-status-section h2, .slots-section h2, .uploaded-section h2 {
+            margin: 0 0 12px 0;
+            font-size: 1rem;
+            color: #1a3a52;
+        }
+        .deal-status-section .deal-row { margin: 6px 0; color: #333; }
+        .deal-status-section .no-deal { color: #666; font-size: 0.9rem; }
+        .slots-section .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        @media (max-width: 560px) { .slots-section .form-grid { grid-template-columns: 1fr; } }
+        .slots-section label { display: block; margin-bottom: 4px; font-size: 0.9rem; color: #555; }
+        .slots-section input, .slots-section textarea {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 0.95rem;
+        }
+        .slots-section textarea { min-height: 60px; resize: vertical; }
+        .slots-section .full-width { grid-column: 1 / -1; }
+        .slots-section .save-btn {
+            margin-top: 12px;
+            padding: 10px 20px;
+            background: #1976d2;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .slots-section .save-btn:hover { background: #1565c0; }
+        .slots-section .save-hint { font-size: 0.85rem; color: #2e7d32; margin-top: 8px; }
+        .uploaded-section ul { list-style: none; padding: 0; margin: 0 0 12px 0; }
+        .uploaded-section li { margin-bottom: 6px; }
+        .uploaded-section a { color: #1976d2; text-decoration: none; }
+        .uploaded-section a:hover { text-decoration: underline; }
+        .uploaded-section .upload-form { margin-top: 12px; }
+        .uploaded-section .upload-form input[type="file"] { margin-right: 8px; }
+        .uploaded-section .upload-btn {
+            padding: 8px 16px;
+            background: #2e7d32;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .uploaded-section .upload-btn:hover { background: #1b5e20; }
+        .uploaded-section .upload-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Личный кабинет</h1>
+        <span class="user" id="userName">—</span>
+        <a href="login.html" id="logoutLink">Выйти</a>
+    </div>
+    <div class="container">
+        <div class="deal-status-section">
+            <h2>Статус сделки</h2>
+            <div id="deal-status-content">Загрузка…</div>
+        </div>
+        <div class="slots-section">
+            <h2>Данные для сделки и шаблонов</h2>
+            <p style="margin:0 0 12px 0; font-size:0.9rem; color:#666;">Заполните поля — они подставятся в КП и договор. Можно сохранить частично.</p>
+            <div class="form-grid" id="slots-form-wrap">Загрузка…</div>
+        </div>
+        <div class="chat-panel">
+            <div id="chat-messages">
+                <div class="welcome">Загрузка диалога…</div>
+            </div>
+            <div class="chat-input-wrap">
+                <input type="text" id="chat-input" placeholder="Напишите сообщение (КП, договор, детали ремонта и обустройства…)">
+                <button type="button" id="chat-send">Отправить</button>
+            </div>
+        </div>
+        <div class="documents-section">
+            <h2>Прикреплённые документы</h2>
+            <ul class="documents-list" id="documents-list">
+                <li class="empty">Загрузка…</li>
+            </ul>
+        </div>
+        <div class="uploaded-section">
+            <h2>Мои документы (скан паспорта и др.)</h2>
+            <ul id="uploaded-list">
+                <li class="empty">Загрузка…</li>
+            </ul>
+            <div class="upload-form">
+                <input type="file" id="upload-file" accept=".pdf,.jpg,.jpeg,.png">
+                <button type="button" class="upload-btn" id="upload-btn">Загрузить</button>
+            </div>
+        </div>
+    </div>
+    <div class="modal-overlay" id="doc-modal">
+        <div class="modal-box">
+            <h3 id="doc-modal-title">Документ</h3>
+            <div class="modal-body" id="doc-modal-body"></div>
+            <button type="button" class="modal-close" id="doc-modal-close">Закрыть</button>
+        </div>
+    </div>
+    <script>
+        (function() {
+            const API_BASE = '';
+            const token = localStorage.getItem('lk_token');
+            if (!token) {
+                window.location.href = 'login.html';
+                return;
+            }
+            const headers = {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token,
+            };
+
+            const messagesEl = document.getElementById('chat-messages');
+            const inputEl = document.getElementById('chat-input');
+            const sendBtn = document.getElementById('chat-send');
+            const userNameEl = document.getElementById('userName');
+
+            function renderMessage(role, content, createdAt) {
+                const div = document.createElement('div');
+                div.className = 'chat-msg ' + role;
+                div.innerHTML = '<div>' + escapeHtml(content) + '</div>' +
+                    (createdAt ? '<div class="time">' + escapeHtml(formatTime(createdAt)) + '</div>' : '');
+                return div;
+            }
+            function escapeHtml(s) {
+                const el = document.createElement('div');
+                el.textContent = s;
+                return el.innerHTML;
+            }
+            function formatTime(iso) {
+                if (!iso) return '';
+                try {
+                    const d = new Date(iso);
+                    return d.toLocaleString('ru-RU', { dateStyle: 'short', timeStyle: 'short' });
+                } catch (_) { return iso; }
+            }
+
+            function clearWelcome() {
+                const w = messagesEl.querySelector('.welcome');
+                if (w) w.remove();
+            }
+
+            async function loadMe() {
+                const r = await fetch(API_BASE + '/api/lk/me', { headers });
+                if (r.status === 401) {
+                    localStorage.removeItem('lk_token');
+                    window.location.href = 'login.html';
+                    return null;
+                }
+                if (!r.ok) return null;
+                return r.json();
+            }
+
+            async function loadConversation() {
+                const r = await fetch(API_BASE + '/api/lk/conversation', { headers });
+                if (r.status === 401) {
+                    localStorage.removeItem('lk_token');
+                    window.location.href = 'login.html';
+                    return;
+                }
+                if (!r.ok) {
+                    messagesEl.innerHTML = '<div class="welcome">Не удалось загрузить диалог.</div>';
+                    return;
+                }
+                const data = await r.json();
+                clearWelcome();
+                const list = data.messages || [];
+                list.forEach(function(m) {
+                    messagesEl.appendChild(renderMessage(m.role, m.content || '', m.created_at));
+                });
+                messagesEl.scrollTop = messagesEl.scrollHeight;
+            }
+
+            async function sendMessage() {
+                const content = (inputEl.value || '').trim();
+                if (!content) return;
+                inputEl.value = '';
+                sendBtn.disabled = true;
+                clearWelcome();
+                messagesEl.appendChild(renderMessage('user', content, new Date().toISOString()));
+                messagesEl.scrollTop = messagesEl.scrollHeight;
+                const assistantPlaceholder = renderMessage('assistant', '…', null);
+                messagesEl.appendChild(assistantPlaceholder);
+                messagesEl.scrollTop = messagesEl.scrollHeight;
+                try {
+                    const r = await fetch(API_BASE + '/api/lk/send', {
+                        method: 'POST',
+                        headers,
+                        body: JSON.stringify({ content }),
+                    });
+                    const data = await r.json().catch(() => ({}));
+                    assistantPlaceholder.remove();
+                    const reply = (data.response || '').trim() || 'Ответ не получен.';
+                    messagesEl.appendChild(renderMessage('assistant', reply, new Date().toISOString()));
+                    messagesEl.scrollTop = messagesEl.scrollHeight;
+                } catch (err) {
+                    assistantPlaceholder.remove();
+                    messagesEl.appendChild(renderMessage('assistant', 'Ошибка отправки: ' + (err.message || 'сеть'), null));
+                }
+                sendBtn.disabled = false;
+            }
+
+            sendBtn.addEventListener('click', sendMessage);
+            inputEl.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+
+            const documentsListEl = document.getElementById('documents-list');
+            const modalEl = document.getElementById('doc-modal');
+            const modalTitle = document.getElementById('doc-modal-title');
+            const modalBody = document.getElementById('doc-modal-body');
+            document.getElementById('doc-modal-close').addEventListener('click', function() {
+                modalEl.classList.remove('visible');
+            });
+            modalEl.addEventListener('click', function(e) {
+                if (e.target === modalEl) modalEl.classList.remove('visible');
+            });
+
+            async function loadDocuments() {
+                try {
+                    const r = await fetch(API_BASE + '/api/lk/documents', { headers });
+                    if (r.status === 401) {
+                        localStorage.removeItem('lk_token');
+                        window.location.href = 'login.html';
+                        return;
+                    }
+                    if (!r.ok) {
+                        const msg = r.status === 404 ? 'Диалог не найден. Обратитесь в поддержку.' : ('Не удалось загрузить список документов (ошибка ' + r.status + '). ');
+                        documentsListEl.innerHTML = '<li class="empty">' + msg + '<button type="button" class="link-style" onclick="location.reload()">Обновить страницу</button></li>';
+                        return;
+                    }
+                    const data = await r.json();
+                    const docs = data.documents || [];
+                    if (docs.length === 0) {
+                        documentsListEl.innerHTML = '<li class="empty">Пока нет прикреплённых документов.</li>';
+                        return;
+                    }
+                    documentsListEl.innerHTML = '';
+                    docs.forEach(function(d) {
+                        const li = document.createElement('li');
+                        if (d.type === 'proposal') {
+                            const btn = document.createElement('button');
+                            btn.className = 'link-style';
+                            btn.textContent = d.name || ('КП #' + d.id);
+                            btn.addEventListener('click', function() { openDoc('proposal', d.id, d.name); });
+                            li.appendChild(btn);
+                        } else if (d.type === 'contract') {
+                            const btn = document.createElement('button');
+                            btn.className = 'link-style';
+                            btn.textContent = d.name || 'Договор';
+                            btn.addEventListener('click', function() { openDoc('contract', null, d.name); });
+                            li.appendChild(btn);
+                        }
+                        documentsListEl.appendChild(li);
+                    });
+                } catch (e) {
+                    documentsListEl.innerHTML = '<li class="empty">Не удалось загрузить документы.</li>';
+                }
+            }
+
+            async function openDoc(type, id, title) {
+                modalTitle.textContent = title || 'Документ';
+                modalBody.textContent = 'Загрузка…';
+                modalBody.classList.remove('contract-html');
+                modalEl.classList.add('visible');
+                try {
+                    const url = type === 'contract'
+                        ? (API_BASE + '/api/lk/documents/contract')
+                        : (API_BASE + '/api/lk/documents/proposal/' + id);
+                    const r = await fetch(url, { headers });
+                    if (!r.ok) { modalBody.textContent = 'Ошибка загрузки документа.'; return; }
+                    const data = await r.json();
+                    if (type === 'contract') {
+                        modalBody.innerHTML = escapeHtml(data.body || '').replace(/\n/g, '<br>');
+                        modalBody.classList.add('contract-html');
+                    } else {
+                        modalBody.textContent = data.content_text || '(пусто)';
+                    }
+                } catch (e) {
+                    modalBody.textContent = 'Ошибка: ' + (e.message || 'сеть');
+                }
+            }
+
+            async function loadDealStatus() {
+                const el = document.getElementById('deal-status-content');
+                try {
+                    const r = await fetch(API_BASE + '/api/lk/deal', { headers });
+                    const data = await r.json().catch(function() { return {}; });
+                    if (data.deal) {
+                        const d = data.deal;
+                        el.innerHTML =
+                            '<div class="deal-row"><strong>Сделка:</strong> ' + escapeHtml(d.name || '—') + '</div>' +
+                            '<div class="deal-row"><strong>Этап:</strong> ' + escapeHtml(d.status_name) + ' (воронка: ' + escapeHtml(d.pipeline_name) + ')</div>' +
+                            (d.price ? '<div class="deal-row"><strong>Сумма:</strong> ' + escapeHtml(String(d.price)) + ' ₽</div>' : '');
+                    } else {
+                        el.innerHTML = '<div class="no-deal">' + escapeHtml(data.message || 'Сделка ещё не создана. Оставьте заявку в чате.') + '</div>';
+                    }
+                } catch (e) {
+                    el.innerHTML = '<div class="no-deal">Не удалось загрузить статус.</div>';
+                }
+            }
+
+            var SLOT_FIELDS = [
+                { key: 'client_name', label: 'ФИО клиента' },
+                { key: 'passport', label: 'Паспорт (серия, номер)' },
+                { key: 'object_address', label: 'Адрес объекта' },
+                { key: 'object_name', label: 'Название объекта' },
+                { key: 'budget', label: 'Бюджет (₽)' },
+                { key: 'area_total', label: 'Площадь (м²)' },
+                { key: 'seller_name', label: 'ФИО продавца (для договора)' },
+                { key: 'seller_basis', label: 'Действует на основании (для договора)' },
+                { key: 'city', label: 'Город' },
+                { key: 'settlement', label: 'Населённый пункт' },
+                { key: 'lot_number', label: 'Номер участка' },
+            ];
+
+            async function loadSlots() {
+                const wrap = document.getElementById('slots-form-wrap');
+                try {
+                    const r = await fetch(API_BASE + '/api/lk/slots', { headers });
+                    if (!r.ok) { wrap.innerHTML = 'Не удалось загрузить данные.'; return; }
+                    const data = await r.json();
+                    const slots = data.slots || {};
+                    var html = '';
+                    SLOT_FIELDS.forEach(function(f) {
+                        var val = slots[f.key] || '';
+                        html += '<div class="full-width"><label>' + escapeHtml(f.label) + '</label><input type="text" id="slot-' + escapeHtml(f.key) + '" value="' + escapeHtml(val) + '" data-key="' + escapeHtml(f.key) + '"></div>';
+                    });
+                    html += '<div class="full-width"><button type="button" class="save-btn" id="slots-save-btn">Сохранить данные</button><div class="save-hint" id="slots-hint"></div></div>';
+                    wrap.innerHTML = html;
+                    document.getElementById('slots-save-btn').addEventListener('click', saveSlots);
+                } catch (e) {
+                    wrap.innerHTML = 'Ошибка загрузки.';
+                }
+            }
+
+            async function saveSlots() {
+                const hint = document.getElementById('slots-hint');
+                hint.textContent = '';
+                var body = {};
+                SLOT_FIELDS.forEach(function(f) {
+                    var inp = document.getElementById('slot-' + f.key);
+                    if (inp) body[f.key] = (inp.value || '').trim() || null;
+                });
+                try {
+                    const r = await fetch(API_BASE + '/api/lk/slots', {
+                        method: 'PATCH',
+                        headers,
+                        body: JSON.stringify(body)
+                    });
+                    if (r.ok) {
+                        hint.textContent = 'Данные сохранены.';
+                        hint.style.color = '#2e7d32';
+                    } else {
+                        hint.textContent = 'Ошибка сохранения.';
+                        hint.style.color = '#c62828';
+                    }
+                } catch (e) {
+                    hint.textContent = 'Ошибка: ' + (e.message || 'сеть');
+                    hint.style.color = '#c62828';
+                }
+            }
+
+            async function loadUploaded() {
+                const listEl = document.getElementById('uploaded-list');
+                try {
+                    const r = await fetch(API_BASE + '/api/lk/documents/uploaded', { headers });
+                    const data = await r.json().catch(function() { return {}; });
+                    const items = data.uploaded || [];
+                    if (items.length === 0) {
+                        listEl.innerHTML = '<li class="empty">Пока нет загруженных документов. Добавьте скан паспорта или другой файл ниже.</li>';
+                        return;
+                    }
+                    listEl.innerHTML = '';
+                    items.forEach(function(item) {
+                        const li = document.createElement('li');
+                        const btn = document.createElement('button');
+                        btn.className = 'link-style';
+                        btn.style.background = 'none';
+                        btn.style.border = 'none';
+                        btn.style.cursor = 'pointer';
+                        btn.style.padding = '0';
+                        btn.style.font = 'inherit';
+                        btn.textContent = (item.filename || 'Документ') + (item.created_at ? ' (' + formatTime(item.created_at) + ')' : '');
+                        btn.addEventListener('click', function() {
+                            fetch(API_BASE + '/api/lk/documents/uploaded/' + item.id, { headers })
+                                .then(function(r) { return r.blob(); })
+                                .then(function(blob) {
+                                    const url = URL.createObjectURL(blob);
+                                    const a = document.createElement('a');
+                                    a.href = url;
+                                    a.download = item.filename || 'document';
+                                    a.target = '_blank';
+                                    a.click();
+                                    URL.revokeObjectURL(url);
+                                })
+                                .catch(function() { alert('Не удалось скачать документ.'); });
+                        });
+                        li.appendChild(btn);
+                        listEl.appendChild(li);
+                    });
+                } catch (e) {
+                    listEl.innerHTML = '<li class="empty">Не удалось загрузить список.</li>';
+                }
+            }
+
+            document.getElementById('upload-btn').addEventListener('click', async function() {
+                const fileInput = document.getElementById('upload-file');
+                const btn = document.getElementById('upload-btn');
+                if (!fileInput.files || !fileInput.files[0]) {
+                    alert('Выберите файл.');
+                    return;
+                }
+                btn.disabled = true;
+                try {
+                    const form = new FormData();
+                    form.append('file', fileInput.files[0]);
+                    const r = await fetch(API_BASE + '/api/lk/documents/upload', {
+                        method: 'POST',
+                        headers: { 'Authorization': 'Bearer ' + token },
+                        body: form
+                    });
+                    if (r.ok) {
+                        fileInput.value = '';
+                        await loadUploaded();
+                    } else {
+                        const err = await r.json().catch(function() { return {}; });
+                        alert(err.detail || 'Ошибка загрузки.');
+                    }
+                } catch (e) {
+                    alert('Ошибка: ' + (e.message || 'сеть'));
+                }
+                btn.disabled = false;
+            });
+
+            (async function init() {
+                const me = await loadMe();
+                if (!me) {
+                    messagesEl.innerHTML = '<div class="welcome">Ошибка загрузки.</div>';
+                    return;
+                }
+                userNameEl.textContent = (me.user && (me.user.name || me.user.login)) || 'Клиент';
+                await Promise.all([loadDealStatus(), loadSlots(), loadUploaded()]);
+                await loadConversation();
+                await loadDocuments();
+            })();
+        })();
+    </script>
+</body>
+</html>
