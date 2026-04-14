@@ -42,6 +42,7 @@ n8n/.n8n-local/
 # Database
 *.db
 *.sqlite
+.pg/
 
 # Temporary files
 *.tmp
