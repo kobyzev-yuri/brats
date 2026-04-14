@@ -1,5 +1,7 @@
-# n8n данные
+# n8n данные (локальный UI-кэш npx/docker — не коммитить)
 .n8n/
+.n8n-local/
+**/.cache/
 workflows/*.json
 !workflows/sales-agent-kb-integration.json
 

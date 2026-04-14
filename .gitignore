@@ -34,10 +34,12 @@ Thumbs.db
 *.log
 logs/
 
-# n8n
+# n8n (кэш npx: .n8n-local/.cache — только локально)
 .n8n/
+**/.n8n-local/
 n8n/.n8n/
 n8n/.n8n-local/
+n8n/**/.cache/
 
 # Database
 *.db
